@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YagyaJodd | MEME VAULT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-pink: #ff3366;
+            --cyber-blue: #00f3ff;
+            --neon-yellow: #ffe600;
+            --matrix-green: #0f0;
+            --neon-purple: #b200ff;
+            --black: #050505;
+            --font: 'Press Start 2P', cursive;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: var(--black); color: #fff;
+            font-family: var(--font); overflow-x: hidden;
+        }
+        .scanlines {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: repeating-linear-gradient(to bottom, transparent 0px, transparent 2px, rgba(0,0,0,0.35) 3px);
+            pointer-events: none; z-index: 900;
+        }
+        /* NAV */
+        .page-nav {
+            position: fixed; top: 0; left: 0; width: 100%;
+            background: rgba(5,5,5,0.95); border-bottom: 1px solid #111;
+            display: flex; align-items: center; padding: 15px 30px; z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+        .nav-back { color: var(--neon-pink); text-decoration: none; font-size: 0.55rem; margin-right: auto; transition: 0.2s; }
+        .nav-back:hover { text-shadow: 0 0 10px var(--neon-pink); }
+        .nav-title { font-size: 0.7rem; color: #fff; position: absolute; left: 50%; transform: translateX(-50%); }
+        .nav-other-links { display: flex; gap: 15px; }
+        .nav-other-links a { color: #555; text-decoration: none; font-size: 0.45rem; transition: 0.2s; }
+        .nav-other-links a:hover { color: var(--cyber-blue); }
+
+        /* HERO */
+        .page-hero {
+            padding: 140px 40px 60px;
+            text-align: center; max-width: 900px; margin: 0 auto;
+        }
+        .page-hero h1 { font-size: 2rem; color: var(--neon-pink); margin-bottom: 15px; }
+        .page-hero p { color: #555; font-size: 0.55rem; font-family: monospace; }
+
+        /* MEME SLIDER */
+        .section { padding: 60px 40px; max-width: 1100px; margin: 0 auto; }
+        .section-title {
+            font-size: 1rem; color: var(--cyber-blue); margin-bottom: 8px;
+            border-left: 4px solid var(--cyber-blue); padding-left: 15px;
+        }
+        .section-sub { color: #333; font-size: 0.45rem; font-family: monospace; margin-bottom: 40px; padding-left: 19px; }
+
+        /* FEATURED SLIDER */
+        .featured-slider { position: relative; margin-bottom: 20px; }
+        .feat-slider-inner { overflow: hidden; border: 2px solid #222; }
+        .feat-slide { display: none; }
+        .feat-slide.active { display: block; }
+        .feat-slide-img {
+            width: 100%; height: 450px; object-fit: contain;
+            background: #0a0a0a; display: block;
+        }
+        .feat-slide-fallback {
+            width: 100%; height: 450px; background: #0a0a0a;
+            display: flex; align-items: center; justify-content: center;
+            flex-direction: column; border: 1px dashed #1a1a1a;
+            color: #333; font-size: 0.6rem; text-align: center; line-height: 2;
+        }
+        .feat-caption {
+            background: #000; padding: 20px;
+            border-top: 1px solid #1a1a1a;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .feat-caption-text { font-size: 0.65rem; color: var(--neon-yellow); }
+        .feat-caption-tag { font-size: 0.45rem; color: #555; font-family: monospace; }
+
+        .feat-slider-btn {
+            position: absolute; top: 50%; transform: translateY(-60%);
+            background: rgba(0,0,0,0.85); border: 2px solid var(--neon-yellow);
+            color: var(--neon-yellow); font-size: 1rem; padding: 12px 15px;
+            cursor: pointer; z-index: 10; font-family: var(--font); transition: 0.2s;
+        }
+        .feat-slider-btn:hover { background: var(--neon-yellow); color: #000; box-shadow: 0 0 15px var(--neon-yellow); }
+        .feat-prev { left: -20px; }
+        .feat-next { right: -20px; }
+        .feat-dots { display: flex; gap: 8px; justify-content: center; margin-top: 15px; }
+        .feat-dot { width: 8px; height: 8px; background: #222; cursor: pointer; transition: 0.2s; }
+        .feat-dot.active { background: var(--neon-yellow); }
+
+        /* MEME CARDS GRID */
+        .meme-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .meme-card {
+            background: rgba(255,255,255,0.03); border: 1px solid #1a1a1a;
+            overflow: hidden; transition: 0.3s; cursor: pointer;
+            position: relative;
+        }
+        .meme-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+
+        .meme-img-wrap { width: 100%; height: 220px; overflow: hidden; position: relative; background: #0a0a0a; }
+        .meme-img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+        .meme-card:hover .meme-img-wrap img { transform: scale(1.05); }
+        .meme-img-fallback {
+            width: 100%; height: 100%; display: flex; align-items: center;
+            justify-content: center; flex-direction: column;
+            color: #333; font-size: 0.55rem; text-align: center; line-height: 2;
+            border: 1px dashed #1a1a1a;
+        }
+        .meme-card-body { padding: 15px; }
+        .meme-card-title { font-size: 0.55rem; margin-bottom: 8px; }
+        .meme-card-desc { font-size: 0.45rem; color: #666; font-family: monospace; line-height: 1.6; }
+        .meme-card-tag {
+            display: inline-block; padding: 3px 8px; font-size: 0.4rem; margin-top: 10px;
+            font-family: monospace;
+        }
+        .tag-hindi { background: rgba(255,230,0,0.1); color: var(--neon-yellow); border: 1px solid rgba(255,230,0,0.3); }
+        .tag-western { background: rgba(0,243,255,0.1); color: var(--cyber-blue); border: 1px solid rgba(0,243,255,0.3); }
+        .tag-reels { background: rgba(255,51,102,0.1); color: var(--neon-pink); border: 1px solid rgba(255,51,102,0.3); }
+        .tag-sigma { background: rgba(178,0,255,0.1); color: var(--neon-purple); border: 1px solid rgba(178,0,255,0.3); }
+
+        /* MEME OF THE DAY */
+        .motd-box {
+            background: rgba(255,230,0,0.03); border: 2px solid var(--neon-yellow);
+            padding: 30px; text-align: center; margin-bottom: 60px;
+            box-shadow: 0 0 30px rgba(255,230,0,0.05);
+        }
+        .motd-label { color: var(--neon-yellow); font-size: 0.55rem; margin-bottom: 20px; animation: blink 1.5s infinite; }
+        @keyframes blink { 50% { opacity: 0.3; } }
+        .motd-text { font-size: 1.2rem; line-height: 1.8; margin-bottom: 15px; }
+        .motd-sub { color: #555; font-size: 0.45rem; font-family: monospace; }
+
+        /* TICKER */
+        .meme-ticker-bar {
+            width: 100%; background: rgba(255,230,0,0.05); border-top: 1px solid #1a1a00;
+            border-bottom: 1px solid #1a1a00; overflow: hidden; padding: 10px 0;
+            margin: 20px 0;
+        }
+        .ticker-text { white-space: nowrap; animation: ticker 30s linear infinite; font-size: 0.5rem; color: var(--neon-yellow); }
+        @keyframes ticker { from { transform: translateX(100vw); } to { transform: translateX(-200%); } }
+
+        /* MEME GENERATOR (TEXT) */
+        .meme-gen { border: 1px solid #222; padding: 30px; margin-top: 20px; }
+        .meme-gen h3 { font-size: 0.7rem; color: var(--matrix-green); margin-bottom: 20px; }
+        .gen-output {
+            background: #0a0a0a; border: 1px solid #222; padding: 25px;
+            text-align: center; font-size: 0.8rem; min-height: 80px;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 15px; line-height: 2;
+            color: var(--neon-yellow); cursor: pointer;
+        }
+        .gen-btn {
+            background: var(--matrix-green); color: #000; border: none;
+            padding: 12px 25px; font-family: var(--font); font-size: 0.6rem;
+            cursor: pointer; transition: 0.2s; margin-right: 10px;
+        }
+        .gen-btn:hover { box-shadow: 0 0 15px var(--matrix-green); transform: scale(1.05); }
+
+        /* FOOTER */
+        .page-footer { border-top: 1px solid #111; padding: 40px; text-align: center; }
+        .page-footer p { color: #333; font-size: 0.45rem; font-family: monospace; }
+        .page-footer a { color: var(--neon-pink); text-decoration: none; }
+
+        @media (max-width: 600px) {
+            .page-hero h1 { font-size: 1.3rem; }
+            .section { padding: 40px 20px; }
+            .feat-prev { left: 0; }
+            .feat-next { right: 0; }
+            .meme-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="scanlines"></div>
+
+    <!-- AUDIO -->
+    <audio id="sfx-vine-boom"><source src="audio/vine-boom.mp3" type="audio/mpeg"></audio>
+    <audio id="sfx-bruh"><source src="audio/bruh.mp3" type="audio/mpeg"></audio>
+
+    <!-- NAV -->
+    <nav class="page-nav">
+        <a href="index.html" class="nav-back">← BACK TO HOME</a>
+        <div class="nav-title">😭 MEME VAULT</div>
+        <div class="nav-other-links">
+            <a href="games.html">GAMES</a>
+            <a href="vibes.html">VIBES</a>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <div class="page-hero">
+        <h1>😭 MEME VAULT 😭</h1>
+        <p>// certified bruh moment archive // hindi + western + reels</p>
+        <p>// bhai ye dekh, rula dega 💀</p>
+    </div>
+
+    <!-- MEME OF THE DAY -->
+    <div class="section">
+        <div class="motd-box">
+            <div class="motd-label">★ MEME OF THE DAY ★</div>
+            <div class="motd-text" id="motd-text"></div>
+            <div class="motd-sub" id="motd-sub"></div>
+        </div>
+
+        <!-- TICKER -->
+        <div class="meme-ticker-bar">
+            <div class="ticker-text">
+                bhai kya kar raha hai • SIGMA GRINDSET • no cap fr fr • isko toh block kar • main bhi kaafi accha hu boss • understood the assignment • it's giving villain era • POV: you opened this website • haan bhai • bas kar pagle rula dega • built different • touch grass? nah • we're so back •
+            </div>
+        </div>
+    </div>
+
+    <!-- FEATURED MEME SLIDER -->
+    <div class="section">
+        <div class="section-title">FEATURED MEMES</div>
+        <div class="section-sub">// swipe through the collection // i will add suitable images</div>
+
+        <div class="featured-slider">
+            <div class="feat-slider-inner">
+                <!-- Slide 1 -->
+                <div class="feat-slide active">
+                    <img class="feat-slide-img" src="memes/featured/feat1.jpg" alt="Featured Meme 1"
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                    <div class="feat-slide-fallback">
+                        <div>😭</div>
+                        <div>memes/featured/feat1.jpg</div>
+                        <div style="font-size:0.4rem; color:#222; font-family:monospace">// add your featured meme here</div>
+                    </div>
+                    <div class="feat-caption">
+                        <div class="feat-caption-text">bhai kya kar raha hai tu 💀</div>
+                        <div class="feat-caption-tag">#hindi #reels #2024</div>
+                    </div>
+                </div>
+                <!-- Slide 2 -->
+                <div class="feat-slide">
+                    <img class="feat-slide-img" src="memes/featured/feat2.jpg" alt="Featured Meme 2"
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                    <div class="feat-slide-fallback">
+                        <div>🗿</div>
+                        <div>memes/featured/feat2.jpg</div>
+                        <div style="font-size:0.4rem; color:#222; font-family:monospace">// add your featured meme here</div>
+                    </div>
+                    <div class="feat-caption">
+                        <div class="feat-caption-text">SIGMA GRINDSET ACTIVATED 🗿</div>
+                        <div class="feat-caption-tag">#sigma #western #based</div>
+                    </div>
+                </div>
+                <!-- Slide 3 -->
+                <div class="feat-slide">
+                    <img class="feat-slide-img" src="memes/featured/feat3.jpg" alt="Featured Meme 3"
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                    <div class="feat-slide-fallback">
+                        <div>😤</div>
+                        <div>memes/featured/feat3.jpg</div>
+                        <div style="font-size:0.4rem; color:#222; font-family:monospace">// add your featured meme here</div>
+                    </div>
+                    <div class="feat-caption">
+                        <div class="feat-caption-text">loot liya re 😤</div>
+                        <div class="feat-caption-tag">#hindi #chapri #certified</div>
+                    </div>
+                </div>
+                <!-- Slide 4 -->
+                <div class="feat-slide">
+                    <img class="feat-slide-img" src="memes/featured/feat4.jpg" alt="Featured Meme 4"
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                    <div class="feat-slide-fallback">
+                        <div>💀</div>
+                        <div>memes/featured/feat4.jpg</div>
+                        <div style="font-size:0.4rem; color:#222; font-family:monospace">// add your featured meme here</div>
+                    </div>
+                    <div class="feat-caption">
+                        <div class="feat-caption-text">nobody: absolutely nobody: me: 💅</div>
+                        <div class="feat-caption-tag">#western #nobody #classic</div>
+                    </div>
+                </div>
+                <!-- Slide 5 -->
+                <div class="feat-slide">
+                    <img class="feat-slide-img" src="memes/featured/feat5.jpg" alt="Featured Meme 5"
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                    <div class="feat-slide-fallback">
+                        <div>🔥</div>
+                        <div>memes/featured/feat5.jpg</div>
+                        <div style="font-size:0.4rem; color:#222; font-family:monospace">// add your featured meme here</div>
+                    </div>
+                    <div class="feat-caption">
+                        <div class="feat-caption-text">this is fine 🔥🐕🔥</div>
+                        <div class="feat-caption-tag">#western #thisisfine #mood</div>
+                    </div>
+                </div>
+            </div>
+            <button class="feat-slider-btn feat-prev" onclick="featSlide(-1)">◀</button>
+            <button class="feat-slider-btn feat-next" onclick="featSlide(1)">▶</button>
+            <div class="feat-dots" id="feat-dots"></div>
+        </div>
+    </div>
+
+    <!-- HINDI MEMES SECTION -->
+    <div class="section">
+        <div class="section-title" style="color: var(--neon-yellow);">HINDI MEMES 🇮🇳</div>
+        <div class="section-sub">// desi certified // reels se seedha // bhai ek baar dekh le</div>
+        <div class="meme-grid">
+
+            <div class="meme-card" onclick="playBruh()">
+                <div class="meme-img-wrap">
+                    <img src="memes/hindi/hindi1.jpg" alt="Bhai kya kar raha hai"
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                    <div class="meme-img-fallback">😭<br>memes/hindi/hindi1.jpg<br><span style="font-size:0.4rem; color:#222; font-family:monospace">// add your meme</span></div>
+                </div>
+                <div class="meme-card-body">
+                    <div class="meme-card-title">BHAI KYA KAR RAHA HAI TU 💀</div>
+                    <div class="meme-card-desc">"bhai scene kya hai" — literally every reel comment section in 2024. peak desi energy.</div>
+                    <span class="meme-card-tag tag-hindi">#hindi</span>
+                    <span class="meme-card-tag tag-reels">#reels</span>
+                </div>
+            </div>
+
+            <div class="meme-card" onclick="playBruh()">
+                <div class="meme-img-wrap">
+                    <img src="memes/hindi/hindi2.jpg" alt="Sigma"
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                    <div class="meme-img-fallback">🗿<br>memes/hindi/hindi2.jpg</div>
+                </div>
+                <div class="meme-card-body">
+                    <div class="meme-card-title">SIGMA GRINDSET 🗿</div>
+                    <div class="meme-card-desc">main toh bas chill kar raha hu. hustle in silence. results tumhe himmat denge. 🗿🗿</div>
+                    <span class="meme-card-tag tag-sigma">#sigma</span>
+                    <span class="meme-card-tag tag-hindi">#hindi</span>
+                </div>
+            </div>
+
+            <div class="meme-card" onclick="playBruh()">
+                <div class="meme-img-wrap">
+                    <img src="memes/hindi/hindi3.jpg" alt="Loot liya"
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                    <div class="meme-img-fallback">😤<br>memes/hindi/hindi3.jpg</div>
+                </div>
+                <div class="meme-card-body">
+                    <div class="meme-card-title">LOOT LIYA RE 😤</div>
+                    <div class="meme-card-desc">isko toh block kar bhai. chapri level: MAX. aur bata yaar, sab theek?</div>
+                    <span class="meme-card-tag tag-hindi">#hindi</span>
+                    <span class="meme-card-tag tag-reels">#chapri</span>
+                </div>
+            </div>
+
+            <div class="meme-card" onclick="playBruh()">
+                <div class="meme-img-wrap">
+                    <img src="memes/hindi/hindi4.jpg" alt="Haan bhai"
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                    <div class="meme-img-fallback">🙏<br>memes/hindi/hindi4.jpg</div>
+                </div>
+                <div class="meme-card-body">
+                    <div class="meme-card-title">HAAN BHAI 🙏</div>
+                    <div class="meme-card-desc">aur bata, kya chal raha hai? bas ek "haan bhai" aur scene set hai yaar.</div>
+                    <span class="meme-card-tag tag-hindi">#haanbhai</span>
+                    <span class="meme-card-tag tag-reels">#reels</span>
+                </div>
+            </div>
+
+            <div class="meme-card" onclick="playBruh()">
+                <div class="meme-img-wrap">
+                    <img src="memes/hindi/hindi5.jpg" alt="Bas kar pagle"
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                    <div class="meme-img-fallback">😭😭<br>memes/hindi/hindi5.jpg</div>
+                </div>
+                <div class="meme-card-body">
+                    <div class="meme-card-title">BAS KAR PAGLE RULA DEGA 😭</div>
+                    <div class="meme-card-desc">yeh toh seedha chhaa gaya. main bhi kaafi accha hu boss. certified bhai moment.</div>
+                    <span class="meme-card-tag tag-hindi">#hindi</span>
+                    <span class="meme-card-tag tag-reels">#trending</span>
+                </div>
+            </div>
+
+            <div class="meme-card" onclick="playBruh()">
+                <div class="meme-img-wrap">
+                    <img src="memes/hindi/hindi6.jpg" alt="Ayo wassup"
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                    <div class="meme-img-fallback">👋<br>memes/hindi/hindi6.jpg</div>
+                </div>
+                <div class="meme-card-body">
+                    <div class="meme-card-title">AYO WASSUP TREND 👋</div>
+                    <div class="meme-card-desc">the "ayo wassup" era was a fever dream ngl. desi reels absolutely cooked with this one.</div>
+                    <span class="meme-card-tag tag-hindi">#hindi</span>
+                    <span class="meme-card-tag tag-reels">#ayowassup</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- WESTERN MEMES SECTION -->
+    <div class="section">
+        <div class="section-title" style="color: var(--cyber-blue);">WESTERN MEMES 🌍</div>
+        <div class="section-sub">// certified internet culture // fr fr no cap // understood the assignment</div>
+        <div class="meme-grid">
+
+            <div class="meme-card" onclick="playVineBoom()">
+                <div class="meme-img-wrap">
+                    <img src="memes/western/west1.jpg" alt="Nobody meme"
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                    <div class="meme-img-fallback">💅<br>memes/western/west1.jpg</div>
+                </div>
+                <div class="meme-card-body">
+                    <div class="meme-card-title" style="color: var(--cyber-blue);">NOBODY: ABSOLUTELY NOBODY:</div>
+                    <div class="meme-card-desc">Me at 3am: *builds a cyberpunk personal website with meme references*. understood the assignment fr.</div>
+                    <span class="meme-card-tag tag-western">#western</span>
+                    <span class="meme-card-tag tag-reels">#nobody</span>
+                </div>
+            </div>
+
+            <div class="meme-card" onclick="playVineBoom()">
+                <div class="meme-img-wrap">
+                    <img src="memes/western/west2.jpg" alt="This is fine"
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                    <div class="meme-img-fallback">🔥🐕🔥<br>memes/western/west2.jpg</div>
+                </div>
+                <div class="meme-card-body">
+                    <div class="meme-card-title" style="color: var(--cyber-blue);">THIS IS FINE 🔥</div>
+                    <div class="meme-card-desc">everything is burning but we stay unbothered. main character energy certified. no thoughts head empty.</div>
+                    <span class="meme-card-tag tag-western">#thisisfine</span>
+                    <span class="meme-card-tag tag-western">#classic</span>
+                </div>
+            </div>
+
+            <div class="meme-card" onclick="playVineBoom()">
+                <div class="meme-img-wrap">
+                    <img src="memes/western/west3.jpg" alt="I'm built different"
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                    <div class="meme-img-fallback">💪<br>memes/western/west3.jpg</div>
+                </div>
+                <div class="meme-card-body">
+                    <div class="meme-card-title" style="color: var(--cyber-blue);">I'M BUILT DIFFERENT 💪</div>
+                    <div class="meme-card-desc">not like other websites. my rizz is unmatched. villain era in full effect. no cap fr fr.</div>
+                    <span class="meme-card-tag tag-western">#builtdifferent</span>
+                    <span class="meme-card-tag tag-sigma">#sigma</span>
+                </div>
+            </div>
+
+            <div class="meme-card" onclick="playVineBoom()">
+                <div class="meme-img-wrap">
+                    <img src="memes/western/west4.jpg" alt="POV meme"
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                    <div class="meme-img-fallback">📱<br>memes/western/west4.jpg</div>
+                </div>
+                <div class="meme-card-body">
+                    <div class="meme-card-title" style="color: var(--cyber-blue);">POV: YOU OPENED THIS SITE 📱</div>
+                    <div class="meme-card-desc">POV: you thought it was a normal portfolio. it's giving chaotic cyberpunk fever dream. main character.</div>
+                    <span class="meme-card-tag tag-reels">#pov</span>
+                    <span class="meme-card-tag tag-western">#reels</span>
+                </div>
+            </div>
+
+            <div class="meme-card" onclick="playVineBoom()">
+                <div class="meme-img-wrap">
+                    <img src="memes/western/west5.jpg" alt="Distracted boyfriend"
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                    <div class="meme-img-fallback">👀<br>memes/western/west5.jpg</div>
+                </div>
+                <div class="meme-card-body">
+                    <div class="meme-card-title" style="color: var(--cyber-blue);">DISTRACTED BOYFRIEND 👀</div>
+                    <div class="meme-card-desc">Me: [coding my portfolio] / also me: [adding meme pages, games, and a whole SOS button].</div>
+                    <span class="meme-card-tag tag-western">#distracted</span>
+                    <span class="meme-card-tag tag-western">#classic</span>
+                </div>
+            </div>
+
+            <div class="meme-card" onclick="playVineBoom()">
+                <div class="meme-img-wrap">
+                    <img src="memes/western/west6.jpg" alt="It's giving"
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                    <div class="meme-img-fallback">✨<br>memes/western/west6.jpg</div>
+                </div>
+                <div class="meme-card-body">
+                    <div class="meme-card-title" style="color: var(--cyber-blue);">IT'S GIVING... ✨</div>
+                    <div class="meme-card-desc">it's giving unhinged. it's giving main character. it's giving we need to touch grass immediately.</div>
+                    <span class="meme-card-tag tag-reels">#itsgiving</span>
+                    <span class="meme-card-tag tag-western">#reels</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- MEME GENERATOR -->
+    <div class="section">
+        <div class="section-title" style="color: var(--matrix-green);">MEME GENERATOR 🤖</div>
+        <div class="section-sub">// random certified meme combos // click to generate</div>
+        <div class="meme-gen">
+            <h3>// GENERATE A MEME</h3>
+            <div class="gen-output" id="gen-output" onclick="generateMeme()">
+                CLICK GENERATE TO GET A CERTIFIED MEME
+            </div>
+            <button class="gen-btn" onclick="generateMeme()">GENERATE 🎲</button>
+            <button class="gen-btn" style="background: var(--neon-pink);" onclick="copyMeme()">COPY 📋</button>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="page-footer">
+        <p>YAGYA JODD MEME VAULT © 2025 // <a href="index.html">← HOME</a></p>
+        <p style="margin-top:10px; font-size:0.4rem;">// bhai scene kya hai • haan bhai • bas kar pagle • no cap fr fr</p>
+    </div>
+
+    <script>
+        /* MEME OF THE DAY */
+        const motds = [
+            { text: "bhai kya kar raha hai tu honestly 💀", sub: "// as said by every desi reel comment section" },
+            { text: "nobody: absolutely nobody:\nme: *makes a whole website*", sub: "// understood the assignment" },
+            { text: "SIGMA GRINDSET > everything 🗿", sub: "// hustle in silence. results tumhe himmat denge." },
+            { text: "POV: you thought this was a normal site 💅", sub: "// it's giving... unhinged. we love to see it." },
+            { text: "aur bata yaar, sab theek hai? 🙏", sub: "// haan bhai, main theek hu. tu bata." },
+            { text: "built different. no cap. fr fr. 💪", sub: "// main bhi kaafi accha hu boss" },
+            { text: "loot liya re 😤\nkya scene hai bhai", sub: "// certified chapri certified moment" },
+        ];
+        const today = new Date().getDay();
+        const motd = motds[today % motds.length];
+        document.getElementById('motd-text').textContent = motd.text;
+        document.getElementById('motd-sub').textContent = motd.sub;
+
+        /* FEATURED SLIDER */
+        let featCurrent = 0;
+        const featTotal = 5;
+        function initFeatSlider() {
+            const dc = document.getElementById('feat-dots');
+            for (let i = 0; i < featTotal; i++) {
+                const d = document.createElement('div');
+                d.classList.add('feat-dot');
+                if (i === 0) d.classList.add('active');
+                d.addEventListener('click', () => goFeat(i));
+                dc.appendChild(d);
+            }
+        }
+        function goFeat(n) {
+            const slides = document.querySelectorAll('.feat-slide');
+            const dots = document.querySelectorAll('.feat-dot');
+            slides[featCurrent].classList.remove('active');
+            dots[featCurrent].classList.remove('active');
+            featCurrent = (n + featTotal) % featTotal;
+            slides[featCurrent].classList.add('active');
+            dots[featCurrent].classList.add('active');
+        }
+        function featSlide(dir) { goFeat(featCurrent + dir); }
+        setInterval(() => goFeat(featCurrent + 1), 5000);
+        initFeatSlider();
+
+        /* MEME GENERATOR */
+        const memeStarters = ["bhai", "nobody:", "POV:", "me:", "when", "sigma rule #"];
+        const memeMids = [" kya kar raha hai ", " absolutely nobody: ", ": you open this site and ", " at 3am: ", " you realize ", "69: "];
+        const memeEnds = ["💀", "🗿🗿", "fr fr no cap 💅", "haan bhai 🙏", "loot liya re 😤", "understood the assignment ✅", "it's giving... 😭", "this is fine 🔥"];
+        function generateMeme() {
+            const s = memeStarters[Math.floor(Math.random()*memeStarters.length)];
+            const m = memeMids[Math.floor(Math.random()*memeMids.length)];
+            const e = memeEnds[Math.floor(Math.random()*memeEnds.length)];
+            document.getElementById('gen-output').textContent = s + m + e;
+        }
+        function copyMeme() {
+            const text = document.getElementById('gen-output').textContent;
+            navigator.clipboard.writeText(text).catch(() => {});
+        }
+
+        /* SOUND UTILS */
+        function playBruh() {
+            const a = document.getElementById('sfx-bruh');
+            if (a) { a.currentTime = 0; a.play().catch(()=>{}); }
+        }
+        function playVineBoom() {
+            const a = document.getElementById('sfx-vine-boom');
+            if (a) { a.currentTime = 0; a.play().catch(()=>{}); }
+        }
+    </script>
+</body>
+</html>

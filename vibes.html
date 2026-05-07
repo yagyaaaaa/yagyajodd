@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YagyaJodd | VIBE STATION</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-pink: #ff3366;
+            --cyber-blue: #00f3ff;
+            --neon-yellow: #ffe600;
+            --matrix-green: #0f0;
+            --neon-purple: #b200ff;
+            --black: #050505;
+            --font: 'Press Start 2P', cursive;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--black); color: #fff; font-family: var(--font); overflow-x: hidden; transition: background 2s; }
+
+        /* ANIMATED BG */
+        .vibe-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0; pointer-events: none; overflow: hidden;
+        }
+        .vibe-orb {
+            position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.12;
+            animation: orb-float 8s ease-in-out infinite;
+        }
+        .orb1 { width: 500px; height: 500px; background: var(--neon-purple); top: -100px; left: -100px; animation-delay: 0s; }
+        .orb2 { width: 400px; height: 400px; background: var(--neon-pink); bottom: -50px; right: -50px; animation-delay: 3s; }
+        .orb3 { width: 300px; height: 300px; background: var(--cyber-blue); top: 40%; left: 40%; animation-delay: 6s; }
+        @keyframes orb-float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -20px) scale(1.1); }
+            66% { transform: translate(-20px, 30px) scale(0.95); }
+        }
+
+        .scanlines {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: repeating-linear-gradient(to bottom, transparent 0px, transparent 2px, rgba(0,0,0,0.25) 3px);
+            pointer-events: none; z-index: 900;
+        }
+
+        /* NAV */
+        .page-nav {
+            position: fixed; top: 0; left: 0; width: 100%;
+            background: rgba(5,5,5,0.9); border-bottom: 1px solid #111;
+            display: flex; align-items: center; padding: 15px 30px; z-index: 100;
+            backdrop-filter: blur(20px);
+        }
+        .nav-back { color: var(--neon-purple); text-decoration: none; font-size: 0.55rem; margin-right: auto; transition: 0.2s; }
+        .nav-back:hover { text-shadow: 0 0 10px var(--neon-purple); }
+        .nav-title { font-size: 0.7rem; position: absolute; left: 50%; transform: translateX(-50%); }
+        .nav-other { display: flex; gap: 15px; }
+        .nav-other a { color: #555; text-decoration: none; font-size: 0.45rem; transition: 0.2s; }
+        .nav-other a:hover { color: var(--neon-purple); }
+
+        /* HERO */
+        .vibe-hero {
+            padding: 130px 40px 60px; text-align: center; position: relative; z-index: 1;
+        }
+        .vibe-hero h1 { font-size: 2rem; background: linear-gradient(135deg, var(--neon-purple), var(--neon-pink), var(--cyber-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 15px; }
+        .vibe-hero p { color: #555; font-size: 0.5rem; font-family: monospace; }
+
+        /* VIZ BAR */
+        .visualizer {
+            display: flex; align-items: flex-end; justify-content: center;
+            gap: 4px; height: 60px; margin: 30px auto 0;
+            width: 200px;
+        }
+        .viz-bar {
+            width: 8px; background: var(--neon-purple);
+            animation: viz-pulse var(--dur, 0.8s) ease-in-out infinite alternate;
+            border-radius: 2px 2px 0 0;
+        }
+        @keyframes viz-pulse { from { height: 5px; opacity: 0.4; } to { height: var(--max, 40px); opacity: 1; } }
+
+        /* SECTION */
+        .section { padding: 60px 40px; max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
+        .section-title { font-size: 0.9rem; margin-bottom: 8px; border-left: 4px solid var(--neon-purple); padding-left: 15px; }
+        .section-sub { color: #333; font-size: 0.45rem; font-family: monospace; padding-left: 19px; margin-bottom: 30px; }
+
+        /* AUDIO PLAYER */
+        .player-box {
+            background: rgba(178,0,255,0.04); border: 1px solid rgba(178,0,255,0.2);
+            padding: 30px; margin-bottom: 30px; position: relative; overflow: hidden;
+        }
+        .player-box::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%;
+            background: var(--neon-purple);
+        }
+        .now-playing-label { color: var(--neon-purple); font-size: 0.5rem; margin-bottom: 20px; animation: blink 2s infinite; }
+        @keyframes blink { 50% { opacity: 0.3; } }
+        .track-title { font-size: 0.8rem; color: #fff; margin-bottom: 8px; }
+        .track-sub { color: #555; font-size: 0.45rem; font-family: monospace; margin-bottom: 20px; }
+        .player-controls { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
+        .ctrl-btn {
+            background: transparent; border: 1px solid #333; color: #aaa;
+            padding: 10px 18px; font-family: var(--font); font-size: 0.55rem;
+            cursor: pointer; transition: 0.2s;
+        }
+        .ctrl-btn:hover { border-color: var(--neon-purple); color: var(--neon-purple); box-shadow: 0 0 10px rgba(178,0,255,0.2); }
+        .ctrl-btn.active-btn { background: var(--neon-purple); color: #000; border-color: var(--neon-purple); }
+        .progress-bar { flex: 1; min-width: 100px; }
+        audio.vibe-audio { width: 100%; margin-top: 15px; filter: hue-rotate(270deg) saturate(2); }
+
+        /* PLAYLIST */
+        .playlist { margin-top: 20px; }
+        .playlist-item {
+            display: flex; align-items: center; padding: 15px;
+            border-bottom: 1px solid #0d0d0d; cursor: pointer; transition: 0.2s;
+            gap: 15px;
+        }
+        .playlist-item:hover { background: rgba(178,0,255,0.05); }
+        .playlist-item.playing { border-left: 3px solid var(--neon-purple); background: rgba(178,0,255,0.07); }
+        .pl-num { color: #333; font-size: 0.45rem; width: 20px; }
+        .pl-info { flex: 1; }
+        .pl-name { font-size: 0.55rem; color: #ccc; margin-bottom: 4px; }
+        .pl-vibe { font-size: 0.4rem; color: #444; font-family: monospace; }
+        .pl-tag { font-size: 0.4rem; padding: 3px 8px; font-family: monospace; }
+        .tag-phonk { background: rgba(255,51,102,0.1); color: var(--neon-pink); border: 1px solid rgba(255,51,102,0.2); }
+        .tag-synth { background: rgba(0,243,255,0.1); color: var(--cyber-blue); border: 1px solid rgba(0,243,255,0.2); }
+        .tag-lofi { background: rgba(178,0,255,0.1); color: var(--neon-purple); border: 1px solid rgba(178,0,255,0.2); }
+        .tag-hindi { background: rgba(255,230,0,0.1); color: var(--neon-yellow); border: 1px solid rgba(255,230,0,0.2); }
+
+        /* VIBE MOODS */
+        .mood-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; margin-top: 20px; }
+        .mood-card {
+            border: 1px solid #1a1a1a; padding: 20px 15px; text-align: center;
+            cursor: pointer; transition: 0.3s; background: rgba(255,255,255,0.02);
+        }
+        .mood-card:hover { transform: translateY(-4px); }
+        .mood-card.active-mood {
+            box-shadow: inset 0 0 20px rgba(255,255,255,0.05);
+            transform: translateY(-4px) scale(1.02);
+        }
+        .mood-emoji { font-size: 2rem; display: block; margin-bottom: 10px; }
+        .mood-name { font-size: 0.5rem; margin-bottom: 5px; }
+        .mood-desc { font-size: 0.35rem; color: #555; font-family: monospace; }
+        .mood-phonk { border-color: rgba(255,51,102,0.3); }
+        .mood-phonk:hover { border-color: var(--neon-pink); box-shadow: 0 0 20px rgba(255,51,102,0.1); }
+        .mood-lofi { border-color: rgba(178,0,255,0.3); }
+        .mood-lofi:hover { border-color: var(--neon-purple); box-shadow: 0 0 20px rgba(178,0,255,0.1); }
+        .mood-synth { border-color: rgba(0,243,255,0.3); }
+        .mood-synth:hover { border-color: var(--cyber-blue); box-shadow: 0 0 20px rgba(0,243,255,0.1); }
+        .mood-hindi { border-color: rgba(255,230,0,0.3); }
+        .mood-hindi:hover { border-color: var(--neon-yellow); box-shadow: 0 0 20px rgba(255,230,0,0.1); }
+        .mood-sigma { border-color: rgba(0,255,0,0.3); }
+        .mood-sigma:hover { border-color: var(--matrix-green); box-shadow: 0 0 20px rgba(0,255,0,0.1); }
+        .mood-villain { border-color: rgba(139,0,3,0.5); }
+        .mood-villain:hover { border-color: #ff0000; box-shadow: 0 0 20px rgba(255,0,0,0.1); }
+
+        /* QUOTE MACHINE */
+        .quote-box {
+            border: 1px solid #222; padding: 30px; text-align: center; margin-top: 40px;
+            background: rgba(255,255,255,0.02); cursor: pointer; transition: 0.3s;
+        }
+        .quote-box:hover { border-color: var(--neon-purple); box-shadow: 0 0 20px rgba(178,0,255,0.08); }
+        .quote-label { color: #333; font-size: 0.45rem; font-family: monospace; margin-bottom: 15px; }
+        .quote-text { font-size: 0.75rem; line-height: 2; color: var(--neon-yellow); margin-bottom: 15px; }
+        .quote-credit { color: #444; font-size: 0.4rem; font-family: monospace; }
+        .quote-hint { color: #222; font-size: 0.4rem; font-family: monospace; margin-top: 10px; }
+
+        /* BG CHANGER */
+        .bg-changer { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+        .bg-swatch {
+            width: 40px; height: 40px; border: 2px solid transparent; cursor: pointer;
+            transition: 0.2s;
+        }
+        .bg-swatch:hover { transform: scale(1.2); border-color: #fff; }
+
+        /* FOOTER */
+        .page-footer { border-top: 1px solid #111; padding: 40px; text-align: center; position: relative; z-index: 1; }
+        .page-footer p { color: #333; font-size: 0.45rem; font-family: monospace; }
+        .page-footer a { color: var(--neon-purple); text-decoration: none; }
+
+        @media (max-width: 600px) {
+            .vibe-hero h1 { font-size: 1.3rem; }
+            .section { padding: 40px 20px; }
+            .mood-grid { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ANIMATED BG -->
+    <div class="vibe-bg">
+        <div class="vibe-orb orb1"></div>
+        <div class="vibe-orb orb2"></div>
+        <div class="vibe-orb orb3"></div>
+    </div>
+
+    <div class="scanlines"></div>
+
+    <!-- AUDIO FILES
+         Add these files to the audio/ folder:
+         - audio/phonk.mp3         (phonk/dark trap)
+         - audio/synthwave.mp3     (synthwave/retrowave)
+         - audio/lofi.mp3          (lofi hip-hop/chill)
+         - audio/sigma.mp3         (sigma/motivational)
+         - audio/bollywood-flip.mp3 (bollywood phonk flip)
+         - audio/bg-main.mp3       (main background loop)
+    -->
+    <audio id="vibe-phonk" loop><source src="audio/phonk.mp3" type="audio/mpeg"></audio>
+    <audio id="vibe-synth" loop><source src="audio/synthwave.mp3" type="audio/mpeg"></audio>
+    <audio id="vibe-lofi" loop><source src="audio/lofi.mp3" type="audio/mpeg"></audio>
+    <audio id="vibe-sigma" loop><source src="audio/sigma.mp3" type="audio/mpeg"></audio>
+    <audio id="vibe-hindi" loop><source src="audio/bollywood-flip.mp3" type="audio/mpeg"></audio>
+    <audio id="sfx-click"><source src="audio/click.mp3" type="audio/mpeg"></audio>
+
+    <!-- NAV -->
+    <nav class="page-nav">
+        <a href="index.html" class="nav-back">← HOME</a>
+        <div class="nav-title">🎵 VIBE STATION</div>
+        <div class="nav-other">
+            <a href="memes.html">MEMES</a>
+            <a href="games.html">GAMES</a>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <div class="vibe-hero">
+        <h1>🎵 VIBE STATION</h1>
+        <p>// choose your era. choose your vibe. no cap.</p>
+        <p>// phonk? lofi? synthwave? bollywood flip? we got it.</p>
+        <div class="visualizer" id="visualizer"></div>
+    </div>
+
+    <!-- MAIN PLAYER -->
+    <div class="section">
+        <div class="section-title" style="color: var(--neon-purple);">NOW PLAYING</div>
+        <div class="section-sub">// click a vibe to load // volume up, touch grass never</div>
+
+        <div class="player-box">
+            <div class="now-playing-label">▶ NOW PLAYING</div>
+            <div class="track-title" id="track-title">SELECT A VIBE BELOW</div>
+            <div class="track-sub" id="track-sub">// no vibe selected yet // choose your era</div>
+            <div class="player-controls">
+                <button class="ctrl-btn" onclick="togglePlay()" id="play-btn">▶ PLAY</button>
+                <button class="ctrl-btn" onclick="stopVibe()" id="stop-btn">■ STOP</button>
+                <button class="ctrl-btn" id="vol-btn" onclick="toggleMute()">🔊</button>
+            </div>
+            <input type="range" min="0" max="1" step="0.05" value="0.5" class="progress-bar"
+                style="margin-top: 15px; width: 100%; accent-color: var(--neon-purple);"
+                oninput="setVolume(this.value)">
+            <div style="font-size:0.35rem; color:#333; font-family:monospace; margin-top:5px;">VOLUME</div>
+        </div>
+
+        <!-- PLAYLIST -->
+        <div class="playlist" id="playlist">
+            <div class="playlist-item" onclick="loadTrack('vibe-phonk', 'PHONK MODE 😈', 'dark trap energy // villain arc fuel', 'tag-phonk', 'PHONK', this)">
+                <div class="pl-num">01</div>
+                <div class="pl-info">
+                    <div class="pl-name">PHONK MODE</div>
+                    <div class="pl-vibe">dark trap // villain era // audio/phonk.mp3</div>
+                </div>
+                <span class="pl-tag tag-phonk">PHONK</span>
+            </div>
+            <div class="playlist-item" onclick="loadTrack('vibe-synth', 'SYNTHWAVE CITY 🌆', 'retrowave // main character driving at night', 'tag-synth', 'SYNTHWAVE', this)">
+                <div class="pl-num">02</div>
+                <div class="pl-info">
+                    <div class="pl-name">SYNTHWAVE CITY</div>
+                    <div class="pl-vibe">retrowave // 80s neon // audio/synthwave.mp3</div>
+                </div>
+                <span class="pl-tag tag-synth">SYNTHWAVE</span>
+            </div>
+            <div class="playlist-item" onclick="loadTrack('vibe-lofi', 'LOFI GRIND ☕', 'chill beats // late night coding // no cap relaxing', 'tag-lofi', 'LOFI', this)">
+                <div class="pl-num">03</div>
+                <div class="pl-info">
+                    <div class="pl-name">LOFI GRIND</div>
+                    <div class="pl-vibe">chill beats // late night // audio/lofi.mp3</div>
+                </div>
+                <span class="pl-tag tag-lofi">LOFI</span>
+            </div>
+            <div class="playlist-item" onclick="loadTrack('vibe-sigma', 'SIGMA RISE 🗿', 'motivational phonk // grindset music // hustle in silence', 'tag-synth', 'SIGMA', this)">
+                <div class="pl-num">04</div>
+                <div class="pl-info">
+                    <div class="pl-name">SIGMA RISE</div>
+                    <div class="pl-vibe">motivational // sigma grindset // audio/sigma.mp3</div>
+                </div>
+                <span class="pl-tag tag-synth">SIGMA</span>
+            </div>
+            <div class="playlist-item" onclick="loadTrack('vibe-hindi', 'BOLLYWOOD FLIP 🎭', 'bollywood phonk flip // desi vibes // haan bhai energy', 'tag-hindi', 'DESI', this)">
+                <div class="pl-num">05</div>
+                <div class="pl-info">
+                    <div class="pl-name">BOLLYWOOD FLIP</div>
+                    <div class="pl-vibe">desi phonk // bollywood trap // audio/bollywood-flip.mp3</div>
+                </div>
+                <span class="pl-tag tag-hindi">DESI</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- MOOD PICKER -->
+    <div class="section">
+        <div class="section-title" style="color: var(--neon-purple);">PICK YOUR MOOD</div>
+        <div class="section-sub">// what era are we in today // choose wisely</div>
+        <div class="mood-grid">
+            <div class="mood-card mood-phonk" onclick="setMood('phonk', this)">
+                <span class="mood-emoji">😈</span>
+                <div class="mood-name" style="color: var(--neon-pink);">VILLAIN ERA</div>
+                <div class="mood-desc">dark. phonk. unhinged.</div>
+            </div>
+            <div class="mood-card mood-lofi" onclick="setMood('lofi', this)">
+                <span class="mood-emoji">☕</span>
+                <div class="mood-name" style="color: var(--neon-purple);">LOFI HOURS</div>
+                <div class="mood-desc">chill. late night. code.</div>
+            </div>
+            <div class="mood-card mood-synth" onclick="setMood('synth', this)">
+                <span class="mood-emoji">🌆</span>
+                <div class="mood-name" style="color: var(--cyber-blue);">SYNTHWAVE</div>
+                <div class="mood-desc">retro. neon. main char.</div>
+            </div>
+            <div class="mood-card mood-hindi" onclick="setMood('hindi', this)">
+                <span class="mood-emoji">🎭</span>
+                <div class="mood-name" style="color: var(--neon-yellow);">DESI MODE</div>
+                <div class="mood-desc">bollywood. desi trap. haan bhai.</div>
+            </div>
+            <div class="mood-card mood-sigma" onclick="setMood('sigma', this)">
+                <span class="mood-emoji">🗿</span>
+                <div class="mood-name" style="color: var(--matrix-green);">SIGMA GRIND</div>
+                <div class="mood-desc">hustle. silence. results.</div>
+            </div>
+            <div class="mood-card mood-villain" onclick="setMood('villain', this)">
+                <span class="mood-emoji">👑</span>
+                <div class="mood-name" style="color: #ff0000;">MAIN CHARACTER</div>
+                <div class="mood-desc">everyone else is NPC.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIBE QUOTE MACHINE -->
+    <div class="section">
+        <div class="section-title" style="color: var(--neon-purple);">VIBE QUOTES</div>
+        <div class="section-sub">// click to get a new vibe quote // certified motivation</div>
+        <div class="quote-box" onclick="newQuote()">
+            <div class="quote-label">// QUOTE OF THE MOMENT</div>
+            <div class="quote-text" id="vibe-quote-text"></div>
+            <div class="quote-credit" id="vibe-quote-credit"></div>
+            <div class="quote-hint">// click for new quote</div>
+        </div>
+    </div>
+
+    <!-- BG COLOR CHANGER -->
+    <div class="section">
+        <div class="section-title" style="color: var(--neon-purple);">BACKGROUND VIBE</div>
+        <div class="section-sub">// change the vibe of the page // aesthetic customization</div>
+        <div class="bg-changer">
+            <div class="bg-swatch" style="background: #050505;" onclick="setBg('#050505')" title="VOID BLACK"></div>
+            <div class="bg-swatch" style="background: #0a0015;" onclick="setBg('#0a0015')" title="DEEP PURPLE"></div>
+            <div class="bg-swatch" style="background: #001a0a;" onclick="setBg('#001a0a')" title="MATRIX GREEN"></div>
+            <div class="bg-swatch" style="background: #15000a;" onclick="setBg('#15000a')" title="NEON DARK"></div>
+            <div class="bg-swatch" style="background: #001020;" onclick="setBg('#001020')" title="CYBER BLUE"></div>
+            <div class="bg-swatch" style="background: linear-gradient(135deg, #0a0015, #150010);" onclick="setBg('linear-gradient(135deg, #0a0015 0%, #150010 100%)')" title="GRADIENT"></div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="page-footer">
+        <p>YAGYA JODD VIBE STATION © 2025 // <a href="index.html">← HOME</a> // <a href="memes.html">MEMES</a></p>
+        <p style="margin-top: 10px;">// add audio files to audio/ folder // see HTML comments for filenames</p>
+    </div>
+
+    <script>
+        /* VISUALIZER */
+        const viz = document.getElementById('visualizer');
+        for (let i = 0; i < 12; i++) {
+            const bar = document.createElement('div');
+            bar.className = 'viz-bar';
+            const dur = (0.4 + Math.random() * 0.8).toFixed(2);
+            const max = (15 + Math.random() * 40).toFixed(0);
+            bar.style.setProperty('--dur', dur + 's');
+            bar.style.setProperty('--max', max + 'px');
+            bar.style.animationDelay = (Math.random() * 0.5).toFixed(2) + 's';
+            viz.appendChild(bar);
+        }
+
+        /* AUDIO PLAYER */
+        let currentAudio = null;
+        let currentItem = null;
+        let isMuted = false;
+        let currentVol = 0.5;
+
+        function loadTrack(audioId, title, sub, tagClass, tagName, item) {
+            if (currentAudio) { currentAudio.pause(); currentAudio.currentTime = 0; }
+            if (currentItem) currentItem.classList.remove('playing');
+
+            currentAudio = document.getElementById(audioId);
+            currentItem = item;
+            item.classList.add('playing');
+
+            document.getElementById('track-title').textContent = title;
+            document.getElementById('track-sub').textContent = sub;
+            document.getElementById('play-btn').textContent = '⏸ PAUSE';
+
+            currentAudio.volume = currentVol;
+            currentAudio.play().catch(() => {
+                document.getElementById('track-sub').textContent = sub + ' // add audio file to play';
+            });
+        }
+
+        function togglePlay() {
+            if (!currentAudio) return;
+            if (currentAudio.paused) {
+                currentAudio.play();
+                document.getElementById('play-btn').textContent = '⏸ PAUSE';
+            } else {
+                currentAudio.pause();
+                document.getElementById('play-btn').textContent = '▶ PLAY';
+            }
+        }
+
+        function stopVibe() {
+            if (currentAudio) { currentAudio.pause(); currentAudio.currentTime = 0; }
+            document.getElementById('play-btn').textContent = '▶ PLAY';
+        }
+
+        function setVolume(val) {
+            currentVol = parseFloat(val);
+            if (currentAudio) currentAudio.volume = currentVol;
+        }
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            if (currentAudio) currentAudio.muted = isMuted;
+            document.getElementById('vol-btn').textContent = isMuted ? '🔇' : '🔊';
+        }
+
+        /* MOOD SETTER */
+        const moodMap = {
+            phonk: { color: '#ff3366', bg: '#15000a' },
+            lofi: { color: '#b200ff', bg: '#0a0015' },
+            synth: { color: '#00f3ff', bg: '#001020' },
+            hindi: { color: '#ffe600', bg: '#0f0a00' },
+            sigma: { color: '#0f0', bg: '#001a0a' },
+            villain: { color: '#ff0000', bg: '#0d0000' },
+        };
+        function setMood(mood, el) {
+            document.querySelectorAll('.mood-card').forEach(c => c.classList.remove('active-mood'));
+            el.classList.add('active-mood');
+            const m = moodMap[mood];
+            document.body.style.background = m.bg;
+            document.querySelectorAll('.vibe-orb').forEach((orb, i) => {
+                if (i === 0) orb.style.background = m.color;
+            });
+        }
+
+        /* BG CHANGER */
+        function setBg(color) {
+            document.body.style.background = color;
+        }
+
+        /* VIBE QUOTES */
+        const vibeQuotes = [
+            { text: "hustle in silence.\nlet success make the noise.", credit: "// sigma grindset 101" },
+            { text: "bhai kya kar raha hai tu?\nkuch toh kar yaar.", credit: "// desi motivation™" },
+            { text: "I'm not lazy.\nI'm in energy-saving mode.", credit: "// main character mode" },
+            { text: "main toh bas chill kar raha hu.\nbut make it sigma.", credit: "// haan bhai" },
+            { text: "nobody: absolutely nobody:\nme: building a cyberpunk website at 3am.", credit: "// understood the assignment" },
+            { text: "your vibe is your currency.\nspend it wisely.", credit: "// vibe economics" },
+            { text: "POV: you're the main character\nand everyone else is an NPC.", credit: "// protagonist mode" },
+            { text: "it's giving villain era.\nwe love to see it.", credit: "// reels certified 2024" },
+            { text: "bas kar pagle rula dega.\n*continues anyway*", credit: "// desi persistence" },
+            { text: "we're so back.\n(we never left)", credit: "// sigma grindset" },
+            { text: "no cap fr fr:\nyour potential is unlimited.", credit: "// real talk" },
+            { text: "loot liya re.\nthe W is imminent.", credit: "// certified desi W" },
+        ];
+        let quoteIdx = Math.floor(Math.random() * vibeQuotes.length);
+        function newQuote() {
+            quoteIdx = (quoteIdx + 1) % vibeQuotes.length;
+            const q = vibeQuotes[quoteIdx];
+            document.getElementById('vibe-quote-text').textContent = q.text;
+            document.getElementById('vibe-quote-credit').textContent = q.credit;
+        }
+        newQuote();
+    </script>
+</body>
+</html>

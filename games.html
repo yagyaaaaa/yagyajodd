@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YagyaJodd | GAME ZONE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-pink: #ff3366;
+            --cyber-blue: #00f3ff;
+            --neon-yellow: #ffe600;
+            --matrix-green: #0f0;
+            --neon-purple: #b200ff;
+            --black: #050505;
+            --font: 'Press Start 2P', cursive;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--black); color: #fff; font-family: var(--font); overflow-x: hidden; }
+        .scanlines {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: repeating-linear-gradient(to bottom, transparent 0px, transparent 2px, rgba(0,0,0,0.3) 3px);
+            pointer-events: none; z-index: 900;
+        }
+        /* NAV */
+        .page-nav {
+            position: fixed; top: 0; left: 0; width: 100%;
+            background: rgba(5,5,5,0.95); border-bottom: 1px solid #111;
+            display: flex; align-items: center; padding: 15px 30px; z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+        .nav-back { color: var(--cyber-blue); text-decoration: none; font-size: 0.55rem; margin-right: auto; transition: 0.2s; }
+        .nav-back:hover { text-shadow: 0 0 10px var(--cyber-blue); }
+        .nav-title { font-size: 0.7rem; color: #fff; position: absolute; left: 50%; transform: translateX(-50%); }
+        .nav-score { color: var(--neon-yellow); font-size: 0.5rem; }
+
+        /* HERO */
+        .page-hero { padding: 120px 40px 40px; text-align: center; }
+        .page-hero h1 { font-size: 1.8rem; color: var(--cyber-blue); margin-bottom: 10px; }
+        .page-hero p { color: #555; font-size: 0.5rem; font-family: monospace; margin-top: 10px; }
+
+        /* HIGH SCORES PANEL */
+        .scores-bar {
+            display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;
+            padding: 20px 40px; border-top: 1px solid #111; border-bottom: 1px solid #111;
+            background: rgba(0,243,255,0.02); margin-bottom: 0;
+        }
+        .score-chip {
+            background: rgba(0,0,0,0.8); border: 1px solid #222; padding: 12px 20px;
+            font-size: 0.45rem; text-align: center;
+        }
+        .score-chip-label { color: #555; margin-bottom: 5px; }
+        .score-chip-val { color: var(--neon-yellow); font-size: 0.6rem; }
+
+        /* GAME SELECTOR */
+        .game-selector { display: flex; gap: 0; border-bottom: 1px solid #111; }
+        .game-tab {
+            flex: 1; padding: 20px; text-align: center; font-size: 0.55rem;
+            cursor: pointer; border-bottom: 3px solid transparent; transition: 0.2s;
+            color: #555; background: transparent; border-top: none; border-left: none; border-right: none;
+            font-family: var(--font);
+        }
+        .game-tab:hover { color: #fff; background: rgba(255,255,255,0.02); }
+        .game-tab.active { color: var(--cyber-blue); border-bottom-color: var(--cyber-blue); background: rgba(0,243,255,0.03); }
+
+        /* GAME PANELS */
+        .game-panel { display: none; padding: 40px; max-width: 800px; margin: 0 auto; }
+        .game-panel.active { display: block; }
+
+        /* =====================
+           GAME 1: SIGMA CLICKER
+        ====================== */
+        #game-clicker { text-align: center; }
+        .clicker-display {
+            margin: 20px auto;
+            position: relative; width: 180px; height: 180px;
+        }
+        .sigma-btn {
+            width: 160px; height: 160px; border-radius: 50%;
+            background: #0a0a0a; border: 3px solid var(--neon-pink);
+            font-size: 3rem; cursor: pointer; transition: 0.1s;
+            display: flex; align-items: center; justify-content: center;
+            user-select: none; margin: 0 auto;
+            box-shadow: 0 0 20px rgba(255,51,102,0.2);
+        }
+        .sigma-btn:active { transform: scale(0.9); box-shadow: 0 0 40px var(--neon-pink); border-color: #fff; }
+        .clicker-stats {
+            display: flex; justify-content: center; gap: 40px; margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .click-stat { text-align: center; }
+        .click-stat-num { font-size: 2rem; color: var(--neon-pink); }
+        .click-stat-label { font-size: 0.45rem; color: #555; margin-top: 5px; }
+        #clicker-timer-bar { width: 100%; height: 8px; background: #111; margin: 20px 0; }
+        #clicker-timer-fill { height: 100%; background: var(--cyber-blue); transition: width 0.1s linear; width: 100%; }
+        .game-start-btn {
+            background: var(--neon-pink); color: #000; border: none;
+            padding: 15px 35px; font-family: var(--font); font-size: 0.7rem;
+            cursor: pointer; transition: 0.2s; margin-top: 10px;
+        }
+        .game-start-btn:hover { box-shadow: 0 0 25px var(--neon-pink); transform: scale(1.05); }
+        .game-start-btn.green { background: var(--matrix-green); }
+        .game-start-btn.blue { background: var(--cyber-blue); }
+        .click-combo {
+            position: absolute; top: -30px; right: -20px;
+            color: var(--neon-yellow); font-size: 0.7rem;
+            animation: combo-pop 0.3s ease forwards;
+            pointer-events: none;
+        }
+        @keyframes combo-pop {
+            0% { transform: scale(0.5) translateY(0); opacity: 1; }
+            100% { transform: scale(1.5) translateY(-30px); opacity: 0; }
+        }
+        .clicker-result {
+            background: rgba(0,0,0,0.8); border: 2px solid var(--neon-yellow);
+            padding: 25px; margin-top: 20px; display: none;
+        }
+        .result-score { font-size: 2rem; color: var(--neon-yellow); margin-bottom: 10px; }
+        .result-rank { font-size: 0.6rem; color: #aaa; }
+
+        /* =====================
+           GAME 2: MEME QUIZ
+        ====================== */
+        #game-quiz { }
+        .quiz-progress { height: 6px; background: #111; margin-bottom: 30px; }
+        .quiz-progress-fill { height: 100%; background: var(--neon-purple); transition: width 0.3s; }
+        .quiz-question {
+            font-size: 0.75rem; line-height: 1.8; margin-bottom: 30px;
+            color: var(--neon-yellow); min-height: 60px;
+        }
+        .quiz-options { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .quiz-opt {
+            background: rgba(255,255,255,0.03); border: 2px solid #222;
+            padding: 20px 15px; cursor: pointer; transition: 0.2s;
+            font-family: var(--font); font-size: 0.5rem; color: #aaa;
+            text-align: center; line-height: 1.6;
+        }
+        .quiz-opt:hover { border-color: var(--neon-purple); color: #fff; background: rgba(178,0,255,0.05); }
+        .quiz-opt.correct { border-color: var(--matrix-green); color: var(--matrix-green); background: rgba(0,255,0,0.05); pointer-events: none; }
+        .quiz-opt.wrong { border-color: var(--neon-pink); color: var(--neon-pink); background: rgba(255,51,102,0.05); pointer-events: none; }
+        .quiz-opt.reveal { border-color: var(--matrix-green); color: var(--matrix-green); opacity: 0.5; pointer-events: none; }
+        .quiz-meta { display: flex; justify-content: space-between; font-size: 0.45rem; color: #555; margin-bottom: 20px; }
+        .quiz-feedback {
+            padding: 15px; font-size: 0.55rem; font-family: monospace;
+            border-left: 3px solid; display: none; margin-bottom: 20px;
+        }
+        .quiz-feedback.correct-fb { border-color: var(--matrix-green); color: var(--matrix-green); }
+        .quiz-feedback.wrong-fb { border-color: var(--neon-pink); color: var(--neon-pink); }
+        #quiz-result { display: none; text-align: center; padding: 30px 0; }
+        .quiz-final-score { font-size: 2.5rem; color: var(--neon-purple); margin-bottom: 15px; }
+        .quiz-final-msg { font-size: 0.7rem; color: #aaa; margin-bottom: 20px; line-height: 2; }
+
+        /* =====================
+           GAME 3: DODGE THE L
+        ====================== */
+        #game-dodge { text-align: center; }
+        #dodge-canvas {
+            border: 2px solid var(--matrix-green);
+            background: #000; display: block; margin: 0 auto;
+            box-shadow: 0 0 20px rgba(0,255,0,0.1);
+            max-width: 100%;
+        }
+        .dodge-controls { margin-top: 15px; font-size: 0.45rem; color: #555; }
+        .dodge-controls span { color: var(--matrix-green); }
+        #dodge-score-display { font-size: 0.8rem; color: var(--matrix-green); margin: 15px 0; }
+        #dodge-lives { font-size: 0.6rem; color: var(--neon-pink); margin-bottom: 10px; }
+
+        /* GENERAL GAME STYLES */
+        .game-title { font-size: 0.9rem; color: #fff; margin-bottom: 8px; }
+        .game-desc { font-size: 0.5rem; color: #555; font-family: monospace; margin-bottom: 25px; line-height: 1.8; }
+        .section-divider { border: none; border-top: 1px solid #111; margin: 20px 0; }
+        audio { display: none; }
+
+        /* FOOTER */
+        .page-footer { border-top: 1px solid #111; padding: 40px; text-align: center; margin-top: 60px; }
+        .page-footer p { color: #333; font-size: 0.45rem; font-family: monospace; }
+        .page-footer a { color: var(--cyber-blue); text-decoration: none; }
+
+        @media (max-width: 600px) {
+            .quiz-options { grid-template-columns: 1fr; }
+            #dodge-canvas { width: 300px !important; height: 400px !important; }
+            .clicker-stats { gap: 20px; }
+            .game-tab { font-size: 0.4rem; padding: 15px 8px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="scanlines"></div>
+
+    <!-- AUDIO -->
+    <audio id="sfx-hit"><source src="audio/game-hit.mp3" type="audio/mpeg"></audio>
+    <audio id="sfx-miss"><source src="audio/game-miss.mp3" type="audio/mpeg"></audio>
+    <audio id="sfx-success"><source src="audio/success.mp3" type="audio/mpeg"></audio>
+    <audio id="sfx-game-over"><source src="audio/game-over.mp3" type="audio/mpeg"></audio>
+    <audio id="sfx-click"><source src="audio/click.mp3" type="audio/mpeg"></audio>
+    <audio id="sfx-vine-boom"><source src="audio/vine-boom.mp3" type="audio/mpeg"></audio>
+
+    <!-- NAV -->
+    <nav class="page-nav">
+        <a href="index.html" class="nav-back">← HOME</a>
+        <div class="nav-title">🎮 GAME ZONE</div>
+        <div class="nav-score" id="nav-hs">HI: <span id="nav-hs-val">0</span></div>
+    </nav>
+
+    <!-- HERO -->
+    <div class="page-hero">
+        <h1>🎮 GAME ZONE</h1>
+        <p>// 3 games. 0 skill required. full sigma required. 🗿</p>
+        <p>// bhai khel ke dekh, scene set hai</p>
+    </div>
+
+    <!-- HIGH SCORES -->
+    <div class="scores-bar">
+        <div class="score-chip">
+            <div class="score-chip-label">SIGMA CLICKER BEST</div>
+            <div class="score-chip-val" id="hs-clicker">0</div>
+        </div>
+        <div class="score-chip">
+            <div class="score-chip-label">MEME QUIZ BEST</div>
+            <div class="score-chip-val" id="hs-quiz">0/10</div>
+        </div>
+        <div class="score-chip">
+            <div class="score-chip-label">DODGE THE L BEST</div>
+            <div class="score-chip-val" id="hs-dodge">0</div>
+        </div>
+    </div>
+
+    <!-- GAME TABS -->
+    <div class="game-selector">
+        <button class="game-tab active" onclick="switchGame('clicker', this)">🗿 SIGMA CLICKER</button>
+        <button class="game-tab" onclick="switchGame('quiz', this)">🧠 MEME QUIZ</button>
+        <button class="game-tab" onclick="switchGame('dodge', this)">💀 DODGE THE L</button>
+    </div>
+
+    <!-- ======================== GAME 1: SIGMA CLICKER ======================== -->
+    <div class="game-panel active" id="game-clicker">
+        <div class="game-title">🗿 SIGMA CLICKER</div>
+        <div class="game-desc">// Click the sigma as many times as possible in 10 seconds.<br>// Faster = more sigma energy. You are built different.</div>
+
+        <div class="clicker-stats">
+            <div class="click-stat">
+                <div class="click-stat-num" id="click-count">0</div>
+                <div class="click-stat-label">CLICKS</div>
+            </div>
+            <div class="click-stat">
+                <div class="click-stat-num" id="click-cps">0.0</div>
+                <div class="click-stat-label">CPS</div>
+            </div>
+            <div class="click-stat">
+                <div class="click-stat-num" id="click-time">10</div>
+                <div class="click-stat-label">SEC LEFT</div>
+            </div>
+        </div>
+
+        <div id="clicker-timer-bar"><div id="clicker-timer-fill"></div></div>
+
+        <div class="clicker-display">
+            <button class="sigma-btn" id="sigma-btn" onclick="registerClick()" disabled>🗿</button>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <button class="game-start-btn" id="clicker-start-btn" onclick="startClicker()">START CLICKING</button>
+        </div>
+
+        <div class="clicker-result" id="clicker-result">
+            <div class="result-score" id="clicker-final-score">0</div>
+            <div class="result-rank" id="clicker-rank"></div>
+            <div style="margin-top:15px;">
+                <button class="game-start-btn" onclick="startClicker()">RETRY</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================== GAME 2: MEME QUIZ ======================== -->
+    <div class="game-panel" id="game-quiz">
+        <div class="game-title">🧠 MEME QUIZ</div>
+        <div class="game-desc">// 10 questions. Hindi + Western memes. Are you sigma enough to know them all?<br>// fr fr no cap this will test your internet culture IQ.</div>
+
+        <div id="quiz-game-area">
+            <div class="quiz-meta">
+                <span>QUESTION <span id="q-num">1</span>/10</span>
+                <span>SCORE: <span id="q-score">0</span></span>
+            </div>
+            <div class="quiz-progress"><div class="quiz-progress-fill" id="quiz-progress-fill" style="width:10%"></div></div>
+            <div class="quiz-question" id="quiz-question">Press START to begin the quiz.</div>
+            <div class="quiz-options" id="quiz-options">
+                <div class="quiz-opt">A</div>
+                <div class="quiz-opt">B</div>
+                <div class="quiz-opt">C</div>
+                <div class="quiz-opt">D</div>
+            </div>
+            <div class="quiz-feedback" id="quiz-feedback"></div>
+            <button class="game-start-btn blue" id="quiz-start-btn" onclick="startQuiz()">START QUIZ</button>
+        </div>
+
+        <div id="quiz-result">
+            <div class="quiz-final-score" id="quiz-final-score">0/10</div>
+            <div class="quiz-final-msg" id="quiz-final-msg"></div>
+            <button class="game-start-btn blue" onclick="startQuiz()">RETRY QUIZ</button>
+        </div>
+    </div>
+
+    <!-- ======================== GAME 3: DODGE THE L ======================== -->
+    <div class="game-panel" id="game-dodge">
+        <div class="game-title">💀 DODGE THE L</div>
+        <div class="game-desc">// Dodge falling "L"s. ← → arrow keys or A/D to move.<br>// Collect "W"s for points. Don't get L'd. Sigma grindset only.</div>
+
+        <div id="dodge-lives">LIVES: ❤️❤️❤️</div>
+        <div id="dodge-score-display">SCORE: <span id="dodge-score">0</span></div>
+        <canvas id="dodge-canvas" width="500" height="480"></canvas>
+        <div class="dodge-controls">
+            MOVE: <span>← A</span> &amp; <span>→ D</span> or Arrow Keys &nbsp;|&nbsp;
+            COLLECT: <span>W</span> for +points &nbsp;|&nbsp;
+            AVOID: <span>L</span>
+        </div>
+        <div style="margin-top: 20px;">
+            <button class="game-start-btn green" id="dodge-start-btn" onclick="startDodge()">START DODGING</button>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="page-footer">
+        <p>YAGYA JODD GAME ZONE © 2025 // <a href="index.html">← HOME</a> // <a href="memes.html">MEMES</a></p>
+    </div>
+
+    <script>
+        /* ========== UTILS ========== */
+        function playSound(id) {
+            const el = document.getElementById(id);
+            if (el) { el.currentTime = 0; el.play().catch(() => {}); }
+        }
+        function switchGame(id, tab) {
+            document.querySelectorAll('.game-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.game-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('game-' + id).classList.add('active');
+            tab.classList.add('active');
+        }
+        function loadHighScores() {
+            document.getElementById('hs-clicker').textContent = localStorage.getItem('hs_clicker') || '0';
+            document.getElementById('hs-quiz').textContent = (localStorage.getItem('hs_quiz') || '0') + '/10';
+            document.getElementById('hs-dodge').textContent = localStorage.getItem('hs_dodge') || '0';
+        }
+        loadHighScores();
+
+        /* ========== GAME 1: SIGMA CLICKER ========== */
+        let clickCount = 0, clickerActive = false, clickerInterval, clickerStart;
+        const CLICK_TIME = 10;
+
+        function startClicker() {
+            clickCount = 0;
+            clickerActive = true;
+            document.getElementById('click-count').textContent = '0';
+            document.getElementById('click-cps').textContent = '0.0';
+            document.getElementById('click-time').textContent = CLICK_TIME;
+            document.getElementById('clicker-result').style.display = 'none';
+            document.getElementById('clicker-timer-fill').style.width = '100%';
+            document.getElementById('sigma-btn').disabled = false;
+            document.getElementById('clicker-start-btn').textContent = 'RUNNING...';
+            document.getElementById('clicker-start-btn').disabled = true;
+            playSound('sfx-success');
+
+            clickerStart = Date.now();
+            let timeLeft = CLICK_TIME;
+            clickerInterval = setInterval(() => {
+                timeLeft -= 0.1;
+                if (timeLeft <= 0) {
+                    clearInterval(clickerInterval);
+                    endClicker();
+                    return;
+                }
+                const pct = (timeLeft / CLICK_TIME) * 100;
+                document.getElementById('clicker-timer-fill').style.width = pct + '%';
+                document.getElementById('click-time').textContent = timeLeft.toFixed(1);
+                const elapsed = (Date.now() - clickerStart) / 1000;
+                document.getElementById('click-cps').textContent = (clickCount / elapsed).toFixed(1);
+            }, 100);
+        }
+
+        function registerClick() {
+            if (!clickerActive) return;
+            clickCount++;
+            document.getElementById('click-count').textContent = clickCount;
+            // Spawn combo bubble
+            const btn = document.getElementById('sigma-btn');
+            const bubble = document.createElement('div');
+            bubble.className = 'click-combo';
+            bubble.textContent = '+1';
+            btn.parentElement.appendChild(bubble);
+            setTimeout(() => bubble.remove(), 400);
+        }
+
+        function endClicker() {
+            clickerActive = false;
+            document.getElementById('sigma-btn').disabled = true;
+            document.getElementById('clicker-start-btn').textContent = 'START CLICKING';
+            document.getElementById('clicker-start-btn').disabled = false;
+            playSound('sfx-vine-boom');
+
+            const result = document.getElementById('clicker-result');
+            document.getElementById('clicker-final-score').textContent = clickCount + ' CLICKS';
+
+            const ranks = [
+                [0, 'SKILL ISSUE. bhai kya scene hai 💀'],
+                [30, 'mid. basic energy. 🗿'],
+                [60, 'not bad ngl. showing potential.'],
+                [90, 'based. certified sigma.'],
+                [120, 'BUILT DIFFERENT. no cap fr fr 🔥'],
+                [160, 'GODLIKE. main character certified 👑'],
+            ];
+            let rankMsg = ranks[0][1];
+            for (const [threshold, msg] of ranks) {
+                if (clickCount >= threshold) rankMsg = msg;
+            }
+            document.getElementById('clicker-rank').textContent = rankMsg;
+            result.style.display = 'block';
+
+            const prev = parseInt(localStorage.getItem('hs_clicker') || '0');
+            if (clickCount > prev) {
+                localStorage.setItem('hs_clicker', clickCount);
+                document.getElementById('hs-clicker').textContent = clickCount;
+            }
+        }
+
+        /* ========== GAME 2: MEME QUIZ ========== */
+        const quizData = [
+            {
+                q: "When someone says 'bhai kya kar raha hai tu', what's the certified desi response?",
+                opts: ["kya scene hai bhai", "understood the assignment", "this is fine", "I'm built different"],
+                ans: 0, fb: "haan bhai, 'kya scene hai bhai' is the only correct answer. certified."
+            },
+            {
+                q: "What does 'SIGMA GRINDSET' mean in internet culture?",
+                opts: ["Working hard alone, no validation needed", "Being loud and social", "Asking for help always", "Playing video games only"],
+                ans: 0, fb: "SIGMA = lone wolf, works alone, doesn't care about validation. 🗿 peak energy."
+            },
+            {
+                q: "Complete: 'nobody: absolutely nobody: ___'",
+                opts: ["me: does something random", "me: is quiet", "me: sleeps", "me: eats"],
+                ans: 0, fb: "The nobody meme format: nobody asked, but the person does it anyway. certified 2018 meme."
+            },
+            {
+                q: "'Loot liya re' is typically used when:",
+                opts: ["You got a great deal or win", "You lost money", "You're sleepy", "You're studying"],
+                ans: 0, fb: "loot liya = you absolutely smashed it. scored big. got the W. certified desi win."
+            },
+            {
+                q: "What is 'it's giving...' used for?",
+                opts: ["Describing the vibe or energy of something", "Giving a gift", "Explaining math", "Asking a question"],
+                ans: 0, fb: "'it's giving main character era' = the vibe is very much main character. AAVE origin, went global."
+            },
+            {
+                q: "In the 'This is Fine' meme, what is the dog doing?",
+                opts: ["Sitting in a burning room saying everything is fine", "Running from fire", "Sleeping peacefully", "Eating food"],
+                ans: 0, fb: "Dog sits in room on fire, says 'This is fine.' = classic 2016 meme about ignoring problems. peak mood."
+            },
+            {
+                q: "What does 'haan bhai' literally translate to?",
+                opts: ["Yes brother", "No way", "What happened", "Come here"],
+                ans: 0, fb: "'haan' = yes, 'bhai' = brother/friend. 'haan bhai' = 'yeah bro'. universal desi acknowledgment."
+            },
+            {
+                q: "POV: stands for:",
+                opts: ["Point of View", "Power of Vibes", "Part of Video", "Proof of Victory"],
+                ans: 0, fb: "POV = Point of View. TikTok/Reels format where you film as if from a specific perspective."
+            },
+            {
+                q: "What does 'no cap' mean?",
+                opts: ["I'm being honest / no lie", "Don't wear a hat", "No ceiling", "No problem"],
+                ans: 0, fb: "'no cap' = no lie, for real. 'fr fr no cap' is maximum honesty. AAVE slang gone mainstream."
+            },
+            {
+                q: "Completing the Indian reel trend: 'bas kar pagle ___'",
+                opts: ["rula dega", "nahi bolunga", "chal bhai", "sahi hai"],
+                ans: 0, fb: "'bas kar pagle rula dega' = stop it man, you'll make me cry. certified desi emotional moment."
+            }
+        ];
+
+        let quizCurrent = 0, quizScore = 0, quizStarted = false;
+
+        function startQuiz() {
+            quizCurrent = 0;
+            quizScore = 0;
+            quizStarted = true;
+            document.getElementById('quiz-result').style.display = 'none';
+            document.getElementById('quiz-game-area').style.display = 'block';
+            document.getElementById('quiz-start-btn').style.display = 'none';
+            document.getElementById('quiz-feedback').style.display = 'none';
+            loadQuestion();
+            playSound('sfx-success');
+        }
+
+        function loadQuestion() {
+            if (quizCurrent >= quizData.length) { endQuiz(); return; }
+            const q = quizData[quizCurrent];
+            document.getElementById('q-num').textContent = quizCurrent + 1;
+            document.getElementById('q-score').textContent = quizScore;
+            document.getElementById('quiz-progress-fill').style.width = ((quizCurrent + 1) / quizData.length * 100) + '%';
+            document.getElementById('quiz-question').textContent = q.q;
+            document.getElementById('quiz-feedback').style.display = 'none';
+            const opts = document.getElementById('quiz-options');
+            opts.innerHTML = '';
+            q.opts.forEach((opt, i) => {
+                const btn = document.createElement('div');
+                btn.className = 'quiz-opt';
+                btn.textContent = opt;
+                btn.addEventListener('click', () => answerQuiz(i, btn));
+                opts.appendChild(btn);
+            });
+        }
+
+        function answerQuiz(idx, btn) {
+            const q = quizData[quizCurrent];
+            const allOpts = document.querySelectorAll('.quiz-opt');
+            allOpts.forEach(o => o.style.pointerEvents = 'none');
+
+            const fb = document.getElementById('quiz-feedback');
+            if (idx === q.ans) {
+                btn.classList.add('correct');
+                quizScore++;
+                fb.className = 'quiz-feedback correct-fb';
+                fb.textContent = '✓ CORRECT! ' + q.fb;
+                playSound('sfx-hit');
+            } else {
+                btn.classList.add('wrong');
+                allOpts[q.ans].classList.add('reveal');
+                fb.className = 'quiz-feedback wrong-fb';
+                fb.textContent = '✗ WRONG. ' + q.fb;
+                playSound('sfx-miss');
+            }
+            fb.style.display = 'block';
+            document.getElementById('q-score').textContent = quizScore;
+
+            setTimeout(() => {
+                quizCurrent++;
+                loadQuestion();
+            }, 1800);
+        }
+
+        function endQuiz() {
+            document.getElementById('quiz-game-area').style.display = 'none';
+            document.getElementById('quiz-result').style.display = 'block';
+            document.getElementById('quiz-final-score').textContent = quizScore + '/10';
+            const msgs = [
+                [0, 'skill issue. bhai internet access hai? 💀'],
+                [4, 'mid. could be worse. touch grass then retry. 🗿'],
+                [6, 'decent. not bad bhai. showing potential.'],
+                [8, 'based. certified internet citizen. no cap.'],
+                [10, 'PERFECT SCORE. SIGMA OVERLORD. BUILT DIFFERENT 🔥👑'],
+            ];
+            let msg = msgs[0][1];
+            for (const [t, m] of msgs) { if (quizScore >= t) msg = m; }
+            document.getElementById('quiz-final-msg').textContent = msg;
+            playSound('sfx-vine-boom');
+            const prev = parseInt(localStorage.getItem('hs_quiz') || '0');
+            if (quizScore > prev) {
+                localStorage.setItem('hs_quiz', quizScore);
+                document.getElementById('hs-quiz').textContent = quizScore + '/10';
+            }
+        }
+
+        /* ========== GAME 3: DODGE THE L ========== */
+        const dodgeCanvas = document.getElementById('dodge-canvas');
+        const dctx = dodgeCanvas.getContext('2d');
+        const CW = dodgeCanvas.width, CH = dodgeCanvas.height;
+
+        let dodgeRunning = false, dodgeScore = 0, dodgeLives = 3;
+        let playerX = CW / 2, playerW = 40, playerH = 40;
+        const playerY = CH - 70;
+        let obstacles = [], powerups = [];
+        let leftPressed = false, rightPressed = false;
+        let dodgeSpeed = 3, dodgeFrame = 0, dodgeAnimId;
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') leftPressed = true;
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') rightPressed = true;
+        });
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') leftPressed = false;
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') rightPressed = false;
+        });
+
+        // Touch/swipe for mobile
+        let touchStartX = 0;
+        dodgeCanvas.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; if (dodgeRunning) e.preventDefault(); }, {passive:false});
+        dodgeCanvas.addEventListener('touchmove', e => {
+            if (!dodgeRunning) return;
+            const dx = e.touches[0].clientX - touchStartX;
+            playerX += dx * 0.5;
+            playerX = Math.max(0, Math.min(CW - playerW, playerX));
+            touchStartX = e.touches[0].clientX;
+            e.preventDefault();
+        }, {passive:false});
+
+        function startDodge() {
+            dodgeRunning = true; dodgeScore = 0; dodgeLives = 3;
+            playerX = CW / 2; obstacles = []; powerups = [];
+            dodgeSpeed = 3; dodgeFrame = 0;
+            updateLivesDisplay();
+            document.getElementById('dodge-score').textContent = '0';
+            document.getElementById('dodge-start-btn').textContent = 'RUNNING...';
+            document.getElementById('dodge-start-btn').disabled = true;
+            if (dodgeAnimId) cancelAnimationFrame(dodgeAnimId);
+            dodgeLoop();
+        }
+
+        function updateLivesDisplay() {
+            document.getElementById('dodge-lives').textContent = 'LIVES: ' + '❤️'.repeat(dodgeLives) + '🖤'.repeat(Math.max(0, 3 - dodgeLives));
+        }
+
+        function spawnObstacle() {
+            obstacles.push({ x: Math.random() * (CW - 30), y: -40, w: 30, h: 30, speed: dodgeSpeed + Math.random() * 2 });
+        }
+        function spawnPowerup() {
+            powerups.push({ x: Math.random() * (CW - 25), y: -30, w: 25, h: 25, speed: dodgeSpeed * 0.7 });
+        }
+
+        function dodgeLoop() {
+            if (!dodgeRunning) return;
+            dodgeFrame++;
+            dctx.clearRect(0, 0, CW, CH);
+
+            // Background grid
+            dctx.strokeStyle = 'rgba(0,255,0,0.05)';
+            dctx.lineWidth = 1;
+            for (let x = 0; x < CW; x += 40) { dctx.beginPath(); dctx.moveTo(x,0); dctx.lineTo(x,CH); dctx.stroke(); }
+            for (let y = 0; y < CH; y += 40) { dctx.beginPath(); dctx.moveTo(0,y); dctx.lineTo(CW,y); dctx.stroke(); }
+
+            // Player movement
+            const spd = 5;
+            if (leftPressed) playerX -= spd;
+            if (rightPressed) playerX += spd;
+            playerX = Math.max(0, Math.min(CW - playerW, playerX));
+
+            // Draw player (robot emoji style)
+            dctx.fillStyle = '#00f3ff';
+            dctx.fillRect(playerX, playerY, playerW, playerH);
+            dctx.fillStyle = '#000';
+            dctx.font = '24px serif';
+            dctx.textAlign = 'center';
+            dctx.fillText('🗿', playerX + playerW / 2, playerY + playerH - 4);
+
+            // Spawn
+            if (dodgeFrame % Math.max(20, 60 - Math.floor(dodgeScore / 10)) === 0) spawnObstacle();
+            if (dodgeFrame % 180 === 0) spawnPowerup();
+            if (dodgeFrame % 300 === 0) dodgeSpeed = Math.min(dodgeSpeed + 0.5, 12);
+
+            // Update & draw obstacles (L)
+            dctx.font = 'bold 28px ' + "'Press Start 2P', monospace";
+            obstacles = obstacles.filter(o => {
+                o.y += o.speed;
+                dctx.fillStyle = '#ff3366';
+                dctx.textAlign = 'center';
+                dctx.fillText('L', o.x + o.w / 2, o.y + o.h);
+                // Collision
+                if (o.x < playerX + playerW && o.x + o.w > playerX && o.y + o.h > playerY && o.y < playerY + playerH) {
+                    dodgeLives--;
+                    updateLivesDisplay();
+                    playSound('sfx-miss');
+                    if (dodgeLives <= 0) { endDodge(); return false; }
+                    return false;
+                }
+                return o.y < CH + 50;
+            });
+
+            // Update & draw powerups (W)
+            powerups = powerups.filter(p => {
+                p.y += p.speed;
+                dctx.fillStyle = '#0f0';
+                dctx.textAlign = 'center';
+                dctx.fillText('W', p.x + p.w / 2, p.y + p.h);
+                if (p.x < playerX + playerW && p.x + p.w > playerX && p.y + p.h > playerY && p.y < playerY + playerH) {
+                    dodgeScore += 10;
+                    document.getElementById('dodge-score').textContent = dodgeScore;
+                    playSound('sfx-hit');
+                    return false;
+                }
+                return p.y < CH + 50;
+            });
+
+            // Score (survival)
+            if (dodgeFrame % 30 === 0) {
+                dodgeScore++;
+                document.getElementById('dodge-score').textContent = dodgeScore;
+            }
+
+            dodgeAnimId = requestAnimationFrame(dodgeLoop);
+        }
+
+        function endDodge() {
+            dodgeRunning = false;
+            cancelAnimationFrame(dodgeAnimId);
+            document.getElementById('dodge-start-btn').textContent = 'RETRY';
+            document.getElementById('dodge-start-btn').disabled = false;
+            playSound('sfx-vine-boom');
+
+            const prev = parseInt(localStorage.getItem('hs_dodge') || '0');
+            if (dodgeScore > prev) {
+                localStorage.setItem('hs_dodge', dodgeScore);
+                document.getElementById('hs-dodge').textContent = dodgeScore;
+            }
+
+            // Draw game over
+            dctx.fillStyle = 'rgba(0,0,0,0.85)';
+            dctx.fillRect(0, 0, CW, CH);
+            dctx.fillStyle = '#ff3366';
+            dctx.font = '20px ' + "'Press Start 2P', monospace";
+            dctx.textAlign = 'center';
+            dctx.fillText('GAME OVER', CW / 2, CH / 2 - 40);
+            dctx.fillStyle = '#ffe600';
+            dctx.font = '14px ' + "'Press Start 2P', monospace";
+            dctx.fillText('SCORE: ' + dodgeScore, CW / 2, CH / 2);
+            dctx.fillStyle = '#555';
+            dctx.font = '9px monospace';
+            dctx.fillText('you took the L. bhai kya kar raha tha 💀', CW / 2, CH / 2 + 40);
+        }
+
+        // Draw initial dodge canvas state
+        dctx.fillStyle = '#050505';
+        dctx.fillRect(0, 0, CW, CH);
+        dctx.fillStyle = '#1a1a1a';
+        dctx.font = '12px ' + "'Press Start 2P', monospace";
+        dctx.textAlign = 'center';
+        dctx.fillText('PRESS START TO PLAY', CW / 2, CH / 2);
+        dctx.fillStyle = '#333';
+        dctx.font = '10px monospace';
+        dctx.fillText('dodge the L, collect the W', CW / 2, CH / 2 + 40);
+    </script>
+</body>
+</html>

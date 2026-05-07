@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YagyaJodd | FATAL ERROR</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- AUDIO -->
+    <audio id="bg-audio" loop><source src="electricbuzz.wav" type="audio/wav"></audio>
+    <audio id="sfx-laser"><source src="lasershot.mp3" type="audio/mpeg"></audio>
+    <audio id="sfx-click"><source src="audio/click.mp3" type="audio/mpeg"></audio>
+    <audio id="sfx-vine-boom"><source src="audio/vine-boom.mp3" type="audio/mpeg"></audio>
+    <audio id="sfx-bruh"><source src="audio/bruh.mp3" type="audio/mpeg"></audio>
+    <audio id="sfx-haan-bhai"><source src="audio/haan-bhai.mp3" type="audio/mpeg"></audio>
+
+    <!-- PARTICLE CANVAS -->
+    <canvas id="particle-canvas"></canvas>
+
+    <div class="scanlines"></div>
+
+    <!-- CURSOR GLOW -->
+    <div id="cursor-glow"></div>
+
+    <!-- 1. START SCREEN -->
+    <div id="start-overlay">
+        <div class="start-content">
+            <p class="blink">> CLICK TO INITIALIZE SYSTEM <</p>
+            <p class="start-sub">[ WARNING: UNSTABLE PARTITION DETECTED ]</p>
+        </div>
+    </div>
+
+    <!-- 2. CUSTOM MODAL -->
+    <div id="custom-modal">
+        <div class="modal-box">
+            <div class="modal-title">⚠ WARNING: UNSTABLE ⚠</div>
+            <div class="modal-msg">
+                You are attempting to access a corrupted partition.<br><br>
+                <strong>THERE IS NO RETURN.</strong><br><br>
+                <span style="color: #0f0; font-size:0.6rem;">// bhai kya kar raha hai tu honestly</span>
+            </div>
+            <button class="modal-btn cancel-btn" onclick="closeModal()">ABORT</button>
+            <button class="modal-btn" onclick="startCrash()">PROCEED</button>
+        </div>
+    </div>
+
+    <!-- 3. LOADING -->
+    <div id="loader-overlay">
+        <div class="battery-container"><div class="battery-fill" id="battery-fill"></div></div>
+        <p id="loading-text" style="color:#0f0; margin-top:20px;">CHARGING...</p>
+        <p id="loading-meme" class="loading-meme-text"></p>
+    </div>
+
+    <!-- 4. BLOOD SCREEN -->
+    <div id="blood-screen"></div>
+
+    <!-- 5. THE GATEKEEPER -->
+    <div id="gatekeeper-screen" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 1500; flex-direction: column; justify-content: center; align-items: center;">
+        <img src="slender.png" style="width: 200px; image-rendering: pixelated; opacity: 0.8; animation: float 3s infinite ease-in-out;">
+        <h2 style="color: var(--blood-red); margin-top: 30px; text-align: center; font-size: 1rem; line-height: 1.8;">ARE YOU ONE OF THE<br>TRUSTED INDIVIDUALS?</h2>
+        <p style="color:#666; font-size:0.5rem; margin-top:10px;">// ek baar soch le bhai</p>
+        <div style="margin-top: 40px; display: flex; gap: 20px;">
+            <button class="modal-btn" onclick="gatekeeperYes()">YES (HAAN BHAI)</button>
+            <button class="modal-btn cancel-btn" onclick="gatekeeperNo()">NO (NAHI)</button>
+        </div>
+    </div>
+
+    <!-- 6. REJECTION SCREEN -->
+    <div id="rejection-screen" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 1600; flex-direction: column; justify-content: center; align-items: center;">
+        <h1 style="color: var(--blood-red); font-size: 2.5rem; text-align:center;">LEAVE.</h1>
+        <p style="color:#555; font-size:0.6rem; margin-top:15px;">// touch grass. seriously.</p>
+        <button class="btn" onclick="window.location.reload()" style="margin-top: 30px;">GO BACK</button>
+    </div>
+
+    <!-- 7. TERMINAL -->
+    <div id="security-terminal">
+        <p style="color: red; border-bottom: 1px solid red; padding-bottom: 10px;">ENTER PASSCODE</p>
+        <input type="password" id="input-pass" class="term-input" placeholder="ACCESS CODE">
+        <p id="term-error" style="color: red; font-size: 0.6rem; display: none;">ACCESS DENIED // wrong answer bestie</p>
+        <button class="modal-btn" onclick="checkLogin()" style="width:100%">ACCESS</button>
+        <button class="modal-btn cancel-btn" onclick="closeTerminal()" style="width:100%; margin-top: 10px; background: #333; color: #fff;">BACK</button>
+    </div>
+
+    <!-- SOS MODAL -->
+    <div id="sos-modal">
+        <div class="sos-box">
+            <div class="sos-header">🚨 EMERGENCY CHANNEL 🚨</div>
+            <p class="sos-sub">// yagya is online (probably)</p>
+            <div class="sos-options">
+                <a href="https://instagram.com/yagya_jodd" target="_blank" class="sos-btn sos-insta">📸 SLIDE INTO DMs<br><span>@yagya_jodd</span></a>
+                <div class="sos-btn sos-vibes" onclick="closeSosModal(); window.location.href='vibes.html'">🎵 SEND A VIBE<br><span>no cap</span></div>
+                <div class="sos-btn sos-meme" onclick="closeSosModal(); playSound('sfx-bruh')">😭 SEND A BRUH<br><span>bruh.</span></div>
+            </div>
+            <p class="sos-meme-quote" id="sos-quote"></p>
+            <button class="modal-btn cancel-btn" onclick="closeSosModal()" style="margin-top:20px; width:100%;">CLOSE CHANNEL</button>
+        </div>
+    </div>
+
+    <!-- 8. MAIN CONTENT -->
+    <div class="container" id="main-content">
+
+        <!-- NAV BAR -->
+        <nav class="main-nav" id="main-nav">
+            <div class="nav-logo" onclick="scrollToTop()">YJ</div>
+            <div class="nav-links">
+                <a href="memes.html" class="nav-link">MEMES</a>
+                <a href="games.html" class="nav-link">GAMES</a>
+                <a href="vibes.html" class="nav-link">VIBES</a>
+                <a href="safehouse/" class="nav-link nav-secret" onclick="openModal(); return false;">SAFEHOUSE 🔒</a>
+            </div>
+            <div class="nav-sos" onclick="openSosModal()">🆘 SOS</div>
+        </nav>
+
+        <!-- HERO SECTION -->
+        <section class="hero-section" id="hero">
+            <div class="left-col">
+                <img src="robologo.png" class="robot-img robot-hover" id="robo-img">
+                <div class="social-links">
+                    <a href="https://github.com/yagyaaaaa" target="_blank" class="btn btn-github">
+                        <span>💻</span> GITHUB
+                    </a>
+                    <a href="https://instagram.com/yagya_jodd" target="_blank" class="btn btn-insta">
+                        <span>📸</span> INSTAGRAM
+                    </a>
+                    <div class="btn btn-psn">
+                        <span>🎮</span> PSN: yagya_jodd
+                    </div>
+                </div>
+            </div>
+            <div class="right-col">
+                <img src="yagya_jodd_textlogo.png" class="text-logo-img glitch-img" data-text="yagya_jodd">
+                <button class="btn btn-secret pulse-btn" onclick="openModal()">ACCESS RESTRICTED DATA</button>
+                <p class="hero-sub">// bhai scene kya hai</p>
+            </div>
+        </section>
+
+        <!-- MEME TICKER -->
+        <div class="meme-ticker-wrapper">
+            <div class="ticker-label">// LIVE FEED</div>
+            <div class="meme-ticker">
+                <div class="ticker-track" id="ticker-track">
+                    <span>POV: you opened this website 💀</span>
+                    <span>•</span>
+                    <span>bhai kya kar raha hai tu 😭</span>
+                    <span>•</span>
+                    <span>SIGMA GRINDSET ACTIVATED 🗿</span>
+                    <span>•</span>
+                    <span>nobody: absolutely nobody: yagya: *makes a website* 💅</span>
+                    <span>•</span>
+                    <span>main toh bas chill kar raha hu 😎</span>
+                    <span>•</span>
+                    <span>it's giving... unhinged 🤌</span>
+                    <span>•</span>
+                    <span>kya scene hai bhai 👀</span>
+                    <span>•</span>
+                    <span>no cap fr fr this site goes hard 🔥</span>
+                    <span>•</span>
+                    <span>I'm built different ngl 💪</span>
+                    <span>•</span>
+                    <span>isko toh block kar bhai 🚫</span>
+                    <span>•</span>
+                    <span>understood the assignment ✅</span>
+                    <span>•</span>
+                    <span>loot liya re 😤</span>
+                    <span>•</span>
+                    <span>villain era unlocked 😈</span>
+                    <span>•</span>
+                    <span>bas kar pagle rula dega 😭😭</span>
+                    <span>•</span>
+                    <span>we're so back 💀</span>
+                    <span>•</span>
+                    <span>aur bata yaar 🙏</span>
+                    <span>•</span>
+                    <span>touch grass challenge: FAILED 🌿</span>
+                    <span>•</span>
+                    <span>rent free in my head 🧠</span>
+                    <span>•</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABOUT SECTION -->
+        <section class="about-section reveal-section" id="about">
+            <div class="section-header">
+                <h2 class="glitch-text" data-text="WHO IS YAGYA JODD?">WHO IS YAGYA JODD?</h2>
+                <p class="section-sub">// classified but not really</p>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card reveal-card">
+                    <div class="stat-icon">🗿</div>
+                    <div class="stat-num counter" data-target="100">0</div>
+                    <div class="stat-label">SIGMA LEVEL</div>
+                </div>
+                <div class="stat-card reveal-card">
+                    <div class="stat-icon">💻</div>
+                    <div class="stat-num counter" data-target="999">0</div>
+                    <div class="stat-label">LINES OF CODE</div>
+                </div>
+                <div class="stat-card reveal-card">
+                    <div class="stat-icon">🎮</div>
+                    <div class="stat-num counter" data-target="69">0</div>
+                    <div class="stat-label">GAMES PLAYED</div>
+                </div>
+                <div class="stat-card reveal-card">
+                    <div class="stat-icon">💪</div>
+                    <div class="stat-num counter" data-target="247">0</div>
+                    <div class="stat-label">GYM SESSIONS</div>
+                </div>
+            </div>
+            <div class="about-desc reveal-card">
+                <p>> YAGYA JODD is a developer, gamer, and certified meme connoisseur.</p>
+                <p>> Main character energy. Villain arc pending.</p>
+                <p>> <span class="highlight-text">{ coding: true, gaming: true, touching_grass: false }</span></p>
+                <p>> Currently: <span class="status-blink">ONLINE AND UNHINGED</span></p>
+            </div>
+        </section>
+
+        <!-- IMAGE SLIDER SECTION -->
+        <section class="slider-section reveal-section" id="gallery">
+            <div class="section-header">
+                <h2 class="glitch-text" data-text="THE ARCHIVE">THE ARCHIVE</h2>
+                <p class="section-sub">// visual data // add your images here</p>
+            </div>
+            <div class="image-slider-container">
+                <button class="slider-btn slider-prev" onclick="slideChange(-1)">◀</button>
+                <div class="image-slider" id="image-slider">
+                    <div class="slide active">
+                        <div class="slide-placeholder">
+                            <img src="bicepflex.jpg" alt="Bicep Flex" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                            <div class="slide-fallback">📸 slider/slide1.jpg<br><span>// add your image</span></div>
+                        </div>
+                        <div class="slide-caption">BICEP MODE ACTIVATED 💪</div>
+                    </div>
+                    <div class="slide">
+                        <div class="slide-placeholder">
+                            <img src="slider/slide2.jpg" alt="Slide 2" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                            <div class="slide-fallback">📸 slider/slide2.jpg<br><span>// add your image</span></div>
+                        </div>
+                        <div class="slide-caption">SIGMA MOMENT 🗿</div>
+                    </div>
+                    <div class="slide">
+                        <div class="slide-placeholder">
+                            <img src="slider/slide3.jpg" alt="Slide 3" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                            <div class="slide-fallback">📸 slider/slide3.jpg<br><span>// add your image</span></div>
+                        </div>
+                        <div class="slide-caption">MAIN CHARACTER ERA 👑</div>
+                    </div>
+                    <div class="slide">
+                        <div class="slide-placeholder">
+                            <img src="slider/slide4.jpg" alt="Slide 4" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                            <div class="slide-fallback">📸 slider/slide4.jpg<br><span>// add your image</span></div>
+                        </div>
+                        <div class="slide-caption">NO CAP FR FR 🔥</div>
+                    </div>
+                    <div class="slide">
+                        <div class="slide-placeholder">
+                            <img src="slider/slide5.jpg" alt="Slide 5" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                            <div class="slide-fallback">📸 slider/slide5.jpg<br><span>// add your image</span></div>
+                        </div>
+                        <div class="slide-caption">VILLAIN ARC 😈</div>
+                    </div>
+                </div>
+                <button class="slider-btn slider-next" onclick="slideChange(1)">▶</button>
+                <div class="slider-dots" id="slider-dots"></div>
+            </div>
+        </section>
+
+        <!-- HUB SECTION -->
+        <section class="hub-section reveal-section" id="hub">
+            <div class="section-header">
+                <h2 class="glitch-text" data-text="EXPLORE THE UNIVERSE">EXPLORE THE UNIVERSE</h2>
+                <p class="section-sub">// choose your path wisely // or don't lol</p>
+            </div>
+            <div class="hub-grid">
+                <a href="memes.html" class="hub-card hub-memes reveal-card">
+                    <div class="hub-card-glow"></div>
+                    <div class="hub-icon">😭</div>
+                    <h3>MEME VAULT</h3>
+                    <p>Hindi + Western memes. Gallery, sliders, and certified bruh moments.</p>
+                    <div class="hub-tag">ENTER →</div>
+                </a>
+                <a href="games.html" class="hub-card hub-games reveal-card">
+                    <div class="hub-card-glow"></div>
+                    <div class="hub-icon">🎮</div>
+                    <h3>GAME ZONE</h3>
+                    <p>Mini games to waste your time. Sigma Clicker, Meme Quiz & more.</p>
+                    <div class="hub-tag">PLAY →</div>
+                </a>
+                <a href="vibes.html" class="hub-card hub-vibes reveal-card">
+                    <div class="hub-card-glow"></div>
+                    <div class="hub-icon">🎵</div>
+                    <h3>VIBE STATION</h3>
+                    <p>Phonk. Synthwave. Lofi. Main character soundtrack certified.</p>
+                    <div class="hub-tag">TUNE IN →</div>
+                </a>
+                <a href="safehouse/" class="hub-card hub-safe reveal-card" onclick="openModal(); return false;">
+                    <div class="hub-card-glow"></div>
+                    <div class="hub-icon">🔒</div>
+                    <h3>SAFEHOUSE</h3>
+                    <p>Access restricted. Passcode required. You probably don't know it.</p>
+                    <div class="hub-tag">TRY →</div>
+                </a>
+            </div>
+        </section>
+
+        <!-- SOS SECTION -->
+        <section class="sos-section reveal-section" id="sos-area">
+            <div class="sos-hero">
+                <div class="sos-emoji-float">🆘</div>
+                <h2>EMERGENCY?<br>TALK TO ME.</h2>
+                <p>// aur bata yaar, kya chal raha hai</p>
+                <button class="sos-trigger-btn pulse-btn" onclick="openSosModal()">
+                    OPEN EMERGENCY CHANNEL
+                </button>
+                <p class="sos-disclaimer">* not actually an emergency service. probably.</p>
+            </div>
+        </section>
+
+        <!-- FOOTER -->
+        <footer class="site-footer">
+            <div class="footer-inner">
+                <img src="robologo.png" class="footer-logo">
+                <p class="footer-text">YAGYA JODD © 2025</p>
+                <p class="footer-sub">// made with chaos and caffeine ☕</p>
+                <p class="footer-meme">[ bhai scene kya hai • no cap fr fr • sigma grindset • haan bhai ]</p>
+                <div class="footer-links">
+                    <a href="https://github.com/yagyaaaaa" target="_blank">GITHUB</a>
+                    <span>•</span>
+                    <a href="https://instagram.com/yagya_jodd" target="_blank">INSTAGRAM</a>
+                    <span>•</span>
+                    <a href="memes.html">MEMES</a>
+                    <span>•</span>
+                    <a href="games.html">GAMES</a>
+                </div>
+            </div>
+        </footer>
+
+    </div><!-- end #main-content -->
+
+    <script src="script.js"></script>
+</body>
+</html>
